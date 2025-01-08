@@ -1,9 +1,10 @@
 import socket
 from communication.connection_handler import ConnectionHandler
 from data.user_manager import UserManager
-from data.message_manager import MessageManager
+from data.message_manager import MessageManag
+from data.database_manager import initialize_database
 from encryption.encryption_manager import EncryptionManager
-from utils.database import initialize_database
+
 
 def main():
 
