@@ -1,7 +1,8 @@
+from database_manager import DatabaseManager
 
 class ClientManager:
     def __init__(self, db_manager):
-        """Initializes the UserManager with a DatabaseManager instance."""
+        """Initializes the ClientManager with a DatabaseManager instance."""
         self.db_manager = db_manager
 
     def add_client(self, client_id, username, public_key):
@@ -35,3 +36,9 @@ class ClientManager:
         """Fetches all clients from the database."""
         query = '''SELECT ID, UserName, PublicKey, LastSeen FROM clients'''
         return self.db_manager.fetch_query(query)
+    
+    def client_exists(self, client_id, username):
+        """Checks if a client exists in the database by ID or username."""
+        query = '''SELECT ID FROM clients WHERE ID = ? OR UserName = ?'''
+        params = (client_id, username)
+        return bool(self.db_manager.fetch_query(query, params))

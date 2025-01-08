@@ -1,3 +1,4 @@
+from database_manager import DatabaseManager
 
 class MessageManager:
     def __init__(self, db_manager):
