@@ -1,24 +1,38 @@
 import selectors
 import socket
+import os
 from data.client_manager import ClientManager
 from data.message_manager import MessageManager
 from data.database_manager import DatabaseManager
 from communication.connection_handler import ConnectionHandler
 from encryption.encryption_manager import EncryptionManager
 
-selector = selectors.DefaultSelector()
+selector: selectors.DefaultSelector = selectors.DefaultSelector()
 
-def accept_connection(server_socket, client_manager, message_manager, encryption_manager):
+def accept_connection(server_socket: socket.socket, client_manager: ClientManager, message_manager: MessageManager, encryption_manager: EncryptionManager) -> None:
     """Accepts a new client connection and registers it with the selector."""
     client_socket, client_address = server_socket.accept()
     print(f"Connection from {client_address}")
     client_socket.setblocking(False)
 
-    connection_handler = ConnectionHandler(client_socket, client_address, client_manager, message_manager, encryption_manager)
+    connection_handler: ConnectionHandler = ConnectionHandler(client_socket, client_address, client_manager, message_manager, encryption_manager)
     selector.register(client_socket, selectors.EVENT_READ, connection_handler.handle)
 
-def main():
-    db_manager = DatabaseManager()
+def load_port() -> int:
+    """Loads the port number from myport.info or defaults to 1357."""
+    try:
+        with open('server/config/myport.info', 'r') as port_file:
+            return int(port_file.read().strip())
+    except FileNotFoundError:
+        print("Warning: 'myport.info' not found. Using default port 1357.")
+        return 1357
+    
+def main() -> None:
+    
+    port = load_port()
+    print(f"Server will start on port {port}")
+
+    db_manager: DatabaseManager = DatabaseManager()
     db_manager.initialize_database()
 
     try:
@@ -28,11 +42,11 @@ def main():
         print("Warning: 'myport.info' not found. Using default port 1357.")
         port = 1357
 
-    client_manager = ClientManager(db_manager)
-    message_manager = MessageManager(db_manager, client_manager)
-    encryption_manager = EncryptionManager()
+    client_manager: ClientManager = ClientManager(db_manager)
+    message_manager: MessageManager = MessageManager(db_manager, client_manager)
+    encryption_manager: EncryptionManager = EncryptionManager()
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('0.0.0.0', port))
     server_socket.listen(5)
     server_socket.setblocking(False)

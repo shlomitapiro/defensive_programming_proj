@@ -4,7 +4,7 @@ import os
 class DatabaseManager:
     def __init__(self, db_name="defensive.db"):
         self.db_name = db_name
-        self._ensure_database_exists()
+        self._ensure_database_file_exists()
 
     def initialize_database(self):
         with sqlite3.connect(self.db_name) as conn:
@@ -31,7 +31,7 @@ class DatabaseManager:
 
             conn.commit()
 
-    def execute_query(self, query, params=()):
+    def execute_query(self, query: str, params=()):
         """Executes a given query without fetching results."""
         try:
             with sqlite3.connect(self.db_name) as conn:
@@ -41,7 +41,7 @@ class DatabaseManager:
         except sqlite3.Error as e:
             print(f"Error executing query: {e}")
 
-    def fetch_query(self, query, params=()):
+    def fetch_query(self, query: str, params=()):
         """Executes a given query and fetches results."""
         try:
             with sqlite3.connect(self.db_name) as conn:
