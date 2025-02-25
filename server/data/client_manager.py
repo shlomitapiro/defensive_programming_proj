@@ -2,11 +2,9 @@ from database_manager import DatabaseManager
 
 class ClientManager:
     def __init__(self, db_manager):
-        """Initializes the ClientManager with a DatabaseManager instance."""
         self.db_manager = db_manager
 
     def add_client(self, client_id, username, public_key):
-        """Adds a new client to the database."""
         query = '''INSERT INTO clients (ID, UserName, PublicKey, LastSeen)
                    VALUES (?, ?, ?, datetime('now'))'''
         params = (client_id, username, public_key)
@@ -30,15 +28,21 @@ class ClientManager:
                    WHERE ID = ?'''
         params = (client_id,)
         self.db_manager.execute_query(query, params)
-        print(f"Updated last seen for client {client_id}.")
+        print(f"Updated last seen for client {client_id}.") 
 
     def get_all_clients(self):
         """Fetches all clients from the database."""
         query = '''SELECT ID, UserName, PublicKey, LastSeen FROM clients'''
         return self.db_manager.fetch_query(query)
     
-    def client_exists(self, client_id, username):
-        """Checks if a client exists in the database by ID or username."""
-        query = '''SELECT ID FROM clients WHERE ID = ? OR UserName = ?'''
-        params = (client_id, username)
+    def client_exists_by_id(self, client_id):
+        """Checks if a client exists in the database by ID."""
+        query = '''SELECT 1 FROM clients WHERE ID = ?'''
+        params = (client_id,)
+        return bool(self.db_manager.fetch_query(query, params))
+
+    def client_exists_by_username(self, username):
+        """Checks if a client exists in the database by username."""
+        query = '''SELECT 1 FROM clients WHERE UserName = ?'''
+        params = (username,)
         return bool(self.db_manager.fetch_query(query, params))
