@@ -1,8 +1,10 @@
 import sqlite3
+import os
 
 class DatabaseManager:
     def __init__(self, db_name="defensive.db"):
         self.db_name = db_name
+        self._ensure_database_exists()
 
     def initialize_database(self):
         with sqlite3.connect(self.db_name) as conn:
@@ -49,3 +51,9 @@ class DatabaseManager:
         except sqlite3.Error as e:
             print(f"Error fetching query: {e}")
             return None
+        
+    def _ensure_database_file_exists(self):
+        """Creates the database file if it does not exist."""
+        if not os.path.exists(self.db_name):
+            print(f"Database file '{self.db_name}' not found. Creating it...")
+            open(self.db_name, 'w').close()
