@@ -18,10 +18,14 @@ def accept_connection(server_socket: socket.socket, client_manager: ClientManage
     connection_handler: ConnectionHandler = ConnectionHandler(client_socket, client_address, client_manager, message_manager, encryption_manager)
     selector.register(client_socket, selectors.EVENT_READ, connection_handler.handle)
 
-def load_port() -> int:
+def load_port():
     """Loads the port number from myport.info or defaults to 1357."""
+    port_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "config/myport.info"))
+
+    print(f"Looking for myport.info at: {port_file_path}")
+
     try:
-        with open('server/config/myport.info', 'r') as port_file:
+        with open(port_file_path, "r") as port_file:
             return int(port_file.read().strip())
     except FileNotFoundError:
         print("Warning: 'myport.info' not found. Using default port 1357.")
