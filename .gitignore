@@ -1,0 +1,11 @@
+
+.vs/
+*.suo
+*.user
+*.cache
+*.pdb
+*.ipch
+*.obj
+*.log
+*.tlog
+*.VC.db
