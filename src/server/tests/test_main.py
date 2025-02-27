@@ -12,7 +12,8 @@ def test_server_start():
 
 def test_load_port():
     """Tests if the server loads the port correctly from myport.info."""
-    config_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../config"))
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    config_dir = os.path.join(base_dir, "config")
     port_file_path = os.path.join(config_dir, "myport.info")
 
     os.makedirs(config_dir, exist_ok=True)
