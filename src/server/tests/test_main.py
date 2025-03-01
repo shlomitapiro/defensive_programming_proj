@@ -30,4 +30,4 @@ def test_load_port():
 
     assert port == 5000
 
-    os.remove(port_file_path)
+    #os.remove(port_file_path)
