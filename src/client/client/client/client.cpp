@@ -58,8 +58,9 @@ std::tuple<std::string, unsigned short> Client::readServerInfo() {
                 // חלק לפני הנקודתיים
                 serverIp = line.substr(0, pos);
                 // חלק אחרי הנקודתיים
-                std::string portStr = line.substr(pos + 1);
+
                 try {
+                    std::string portStr = line.substr(pos + 1);
                     serverPort = static_cast<unsigned short>(std::stoi(portStr));
                 }
                 catch (...) {
@@ -77,8 +78,6 @@ std::tuple<std::string, unsigned short> Client::readServerInfo() {
         std::cerr << "⚠ Warning: Could not open " << serverFilePath
             << "! Using default 127.0.0.1:1234" << std::endl;
     }
-
-    std::cout << "Server IP: " << serverIp << ", Port: " << serverPort << std::endl;
     return { serverIp, serverPort };
 }
 
@@ -215,11 +214,11 @@ bool Client::registerClient(const std::string& username) {
 
     // שלב 4: עדכון מזהה הלקוח _clientId מתוך 16 הבתים הראשונים של ה-payload
     _clientId = std::string(respPayload.begin(), respPayload.begin() + 16);
-	std::cout << "Registration of new client : " << username << " ended successfully." << std::endl;
+	std::cout << "Registration of a new client ended successfully." << std::endl;
 
     // שלב 5: כתיבת פרטי הרישום לקובץ my.info
     if (!writeRegistrationInfoToFile(username)) {
-        return;
+		return false;
     }
 
     return true;
