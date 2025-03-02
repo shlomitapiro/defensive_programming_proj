@@ -133,37 +133,33 @@ bool Client::updateClientIdFromResponse(const std::vector<uint8_t>& response) {
     return true;
 }
 
-// כותב את פרטי הרישום לקובץ my.info
+// כותב את פרטי הרישום לקובץ me.info
 bool Client::writeRegistrationInfoToFile(const std::string& username, const std::string& fileName) {
-	std::string exePath = createFileInExeDir(fileName);
-    // שלב 4: פתיחת הקובץ לכתיבה
-	if (exePath == "") {
-		std::cerr << "Error: Unable to create file: " << fileName << std::endl;
-		return false;
-	}
-    
-	std::ofstream meInfoFile(exePath);
-	if (!meInfoFile.is_open()) {
-		std::cerr << "Error: Unable to open file: " << fileName << std::endl;
-		return false;
-	}
+    std::string exePath = createFileInExeDir(fileName);
+    if (exePath.empty()) {
+        std::cerr << "Error: Unable to create file: " << fileName << std::endl;
+        return false;
+    }
 
-    // שלב 5: כתיבת 3 השורות לפי דרישות המטלה
+    std::ofstream meInfoFile(exePath);
+    if (!meInfoFile.is_open()) {
+        std::cerr << "Error: Unable to open file: " << fileName << std::endl;
+        return false;
+    }
+
     // 1) שם המשתמש
     meInfoFile << username << "\n";
 
-    // 2) מזהה הלקוח (למשל, אם _clientId כבר מחרוזת ב-16 בתים או ב-Hex)
-    //    במידה וצריך לייצג 16 בתים ב-Hex, בצע כאן המרה ל-Hex
-	_clientId = bytesToHex(_clientId);
-    meInfoFile << _clientId << "\n";
+    // 2) מזהה הלקוח כ-Hex לצורך כתיבה לקובץ (לפי דרישות המטלה),
+    // אבל _clientId עצמו נשאר 16 בתים raw בזיכרון.
+    std::string hexId = bytesToHex(_clientId);
+    meInfoFile << hexId << "\n";
 
-    // 3) המפתח הפרטי ב-Base64
+    // 3) מפתח פרטי ב-Base64
     std::string privateKeyBase64 = Base64Wrapper::encode(_rsaPrivate.getPrivateKey());
     meInfoFile << privateKeyBase64 << "\n";
 
-    // שלב 6: סגירת הקובץ
     meInfoFile.close();
-
     return true;
 }
 
@@ -245,7 +241,7 @@ void Client::requestClientsList() {
     const size_t RECORD_SIZE = 16 + 255; // 271
     size_t count = payload.size() / RECORD_SIZE;
 
-    std::cout << "Clients list:\n";
+    std::cout << "\nClients list:\n";
 
     // נניח שהגדרת map גלובלי/חברי במחלקה:
     userMap.clear(); // ריקון המפה הקודמת
@@ -263,8 +259,8 @@ void Client::requestClientsList() {
         // 255 בתים לשם
         std::string userName(reinterpret_cast<const char*>(recordPtr + 16), 255);
         userName = userName.c_str();
-
-        std::cout << "  " << userName << "\n";
+     
+        std::cout << "" << userName << "\n";
 
         // שמירת המיפוי
         userMap[userName] = idRaw;

@@ -19,7 +19,7 @@ public:
     bool sendAll(const std::vector<uint8_t>& data);
 
     // מקבל נתונים מהסוקט (עם גודל ברירת מחדל של 1024 בתים)
-    std::vector<uint8_t> receiveAll(size_t bufferSize = 1024);
+    std::vector<uint8_t> receiveAll() const;
 
     // סוגר את הסוקט במידה ונדרש
     void closeSocket();

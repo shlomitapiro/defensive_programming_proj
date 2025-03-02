@@ -47,14 +47,40 @@ bool SocketWrapper::sendAll(const std::vector<uint8_t>& data) {
     return true;
 }
 
-std::vector<uint8_t> SocketWrapper::receiveAll(size_t bufferSize) {
-    std::vector<uint8_t> response(bufferSize);
-    int bytesRead = recv(sock, reinterpret_cast<char*>(response.data()), static_cast<int>(bufferSize), 0);
-    if (bytesRead <= 0) {
-        std::cerr << "No response received or error occurred!" << std::endl;
-        return std::vector<uint8_t>();
+std::vector<uint8_t> SocketWrapper::receiveAll() const
+{
+    std::vector<uint8_t> response;
+    if (sock == INVALID_SOCKET)
+    {
+        std::cerr << "Socket is invalid!" << std::endl;
+        return response;
     }
-    response.resize(bytesRead);
+
+    const size_t CHUNK_SIZE = 1024;
+    char buffer[CHUNK_SIZE];
+
+    while (true)
+    {
+        int bytesRead = recv(sock, buffer, CHUNK_SIZE, 0);
+        if (bytesRead == 0)
+        {
+            // השרת סגר את החיבור בצורה מסודרת
+            break;
+        }
+        if (bytesRead < 0)
+        {
+            // שגיאה
+            std::cerr << "Error in recv!" << std::endl;
+            response.clear(); // במקרה שרוצים לסמן שגיאה
+            break;
+        }
+        // הוספת מה שקראנו למערך התגובות
+        response.insert(response.end(), buffer, buffer + bytesRead);
+
+        // אם אין עוד מידע כרגע ב-buffer, יתכן שנרצה לבדוק עם select/timeout וכו'.
+        // כרגע, לצורך פשטות, נמשיך לנסות לקרוא - ואם אין עוד מידע, recv תחזיר 0 או שגיאה
+    }
+
     return response;
 }
 
