@@ -22,14 +22,12 @@ public:
     void fetchMessages();
     std::vector<uint8_t> sendRequestAndReceiveResponse(uint16_t requestCode, const std::vector<uint8_t>& payload);
 
-    // Add friend function declaration
-    friend std::ostream& operator<<(std::ostream& os, const Client& client);
-
 private:
     // פונקציות עזר לפרוצדורת הרישום
     std::vector<uint8_t> buildRegistrationPayload(const std::string& username);
     bool updateClientIdFromResponse(const std::vector<uint8_t>& response);
-    bool writeRegistrationInfoToFile(const std::string& username);
+    bool writeRegistrationInfoToFile(const std::string& username, const std::string& filePath);
+    void updateUserMap();
 
     // משתנים פרטיים
     std::tuple<std::string, unsigned short> serverInfo;
@@ -38,4 +36,5 @@ private:
     std::string _clientId;
     RSAPrivateWrapper _rsaPrivate;
     std::unordered_map<std::string, AESWrapper> _symmetricKeys;
+    std::unordered_map<std::string, std::string> userMap;
 };

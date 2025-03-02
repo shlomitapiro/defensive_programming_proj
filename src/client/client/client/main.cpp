@@ -1,90 +1,114 @@
-#include "Base64Wrapper.h"
-#include "RSAWrapper.h"
-#include "AESWrapper.h"
+#define NOMINMAX
+#include "Client.h"
+#include "utils.h"
+#include <limits>
 
-#include <iostream>
-#include <iomanip>
 
-void hexify(const unsigned char* buffer, unsigned int length)
-{
-	std::ios::fmtflags f(std::cout.flags());
-	std::cout << std::hex;
-	for (size_t i = 0; i < length; i++)
-		std::cout << std::setfill('0') << std::setw(2) << (0xFF & buffer[i]) << (((i + 1) % 16 == 0) ? "\n" : " ");
-	std::cout << std::endl;
-	std::cout.flags(f);
+static void displayMenu() {
+    std::cout << "\nMessageU client at your service.\n"
+        << "\n"
+        << "110) Register\n"
+        << "120) Request for clients list\n"
+        << "130) Request for public key\n"
+        << "140) Fetch waiting messages\n"
+        << "150) Send a text message\n"
+        << "151) Send a request for symmetric key\n"
+        << "152) Send your symmetric key\n"
+        << "0) Exit client\n"
+        << "? \n";
 }
 
+int main() {
+    Client client;
+    bool registered = false;
+    std::string username;
 
-int aes_example()
-{
-	std::cout << std::endl << std::endl << "----- AES EXAMPLE -----" << std::endl << std::endl;
+    while (true) {
+        displayMenu();
 
-	std::string plaintext = "Once upon a time, a plain text dreamed to become a cipher";
-	std::cout << "Plain:" << std::endl << plaintext << std::endl;
+        int choice;
+        if (!(std::cin >> choice)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cerr << "Invalid input. Please enter a number.\n";
+            continue;
+        }
 
-	// 1. Generate a key and initialize an AESWrapper. You can also create AESWrapper with default constructor which will automatically generates a random key.
-	unsigned char key[AESWrapper::DEFAULT_KEYLENGTH];
-	AESWrapper aes(AESWrapper::GenerateKey(key, AESWrapper::DEFAULT_KEYLENGTH), AESWrapper::DEFAULT_KEYLENGTH);
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-	// 2. encrypt a message (plain text)
-	std::string ciphertext = aes.encrypt(plaintext.c_str(), plaintext.length());
-	std::cout << "Cipher:" << std::endl;
-	hexify(reinterpret_cast<const unsigned char*>(ciphertext.c_str()), ciphertext.length());	// print binary data nicely
+        if (choice == 0) {
+            std::cout << "Exiting...\n";
+            break;
+        }
 
-	// 3. decrypt a message (cipher text)
-	std::string decrypttext = aes.decrypt(ciphertext.c_str(), ciphertext.length());
-	std::cout << "Decrypted:" << std::endl << decrypttext << std::endl;
+        switch (choice) {
+        case 110: {
+            if (registered) {
+                std::cout << "Error: You already registered.\n";
+            }
+            else {
+                std::cout << "Enter your username: ";
+                std::getline(std::cin, username);
+                if (client.registerClient(username)) {
+                    registered = true;
+                }
+                else {
+                    std::cout << "server responded with an error.\n";
+                }
+            }
+            break;
+        }
+        case 120:
+            client.requestClientsList();
+            break;
+        case 130: {
+            std::cout << "Enter recipient username: ";
+            std::string recipient;
+            std::getline(std::cin, recipient);
+            std::string pubKey = client.getPublicKey(recipient);
+            if (pubKey.empty()) {
+                std::cout << "Public key not found.\n";
+            }
+            else {
+                std::cout << "Public key for " << recipient << ": " << pubKey << "\n";
+            }
+            break;
+        }
 
-	return 0;
-}
-
-
-int rsa_example()
-{
-	std::cout << std::endl << std::endl << "----- RSA EXAMPLE -----" << std::endl << std::endl;
-
-	// plain text (could be binary data as well)
-	unsigned char plain[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-	std::cout << "plain:" << std::endl;
-	hexify(plain, sizeof(plain));		// print binary data nicely
-
-	// 1. Create an RSA decryptor. this is done here to generate a new private/public key pair
-	RSAPrivateWrapper rsapriv;
-
-	// 2. get the public key
-	std::string pubkey = rsapriv.getPublicKey();	// you can get it as std::string ...
-	
-	char pubkeybuff[RSAPublicWrapper::KEYSIZE]; 
-	rsapriv.getPublicKey(pubkeybuff, RSAPublicWrapper::KEYSIZE);	// ...or as a char* buffer
-
-	// 3. create an RSA encryptor
-	RSAPublicWrapper rsapub(pubkey);
-	std::string cipher = rsapub.encrypt((const char*)plain, sizeof(plain));	// you can encrypt a const char* or an std::string 
-	std::cout << "cipher:" << std::endl;
-	hexify((unsigned char*)cipher.c_str(), cipher.length());	// print binary data nicely
-
-
-	// 4. get the private key and encode it as base64 (base64 in not necessary for an RSA decryptor.)
-	std::string base64key = Base64Wrapper::encode(rsapriv.getPrivateKey());
-
-	// 5. create another RSA decryptor using an existing private key (decode the base64 key to an std::string first)
-	RSAPrivateWrapper rsapriv_other(Base64Wrapper::decode(base64key));
-
-	std::string decrypted = rsapriv_other.decrypt(cipher);		// 6. you can decrypt an std::string or a const char* buffer
-	std::cout << "decrypted:" << std::endl;
-	hexify((unsigned char*)decrypted.c_str(), decrypted.length());	// print binary data nicely
-
-	return 0;
-}
-
-
-
-int main()
-{
-	aes_example();
-	
-	rsa_example();
-
-	return 0;
+        case 140:
+            client.fetchMessages();
+            break;
+        case 150: {
+            std::cout << "Enter recipient username: ";
+            std::string recipient;
+            std::getline(std::cin, recipient);
+            std::cout << "Enter your message: ";
+            std::string message;
+            std::getline(std::cin, message);
+            client.sendMessage(recipient, message);
+            break;
+        }
+        case 151: {
+            std::cout << "Enter recipient username for symmetric key request: ";
+            std::string recipient;
+            std::getline(std::cin, recipient);
+            client.sendMessage(recipient, "symmetric key request");
+            break;
+        }
+        case 152: {
+            std::cout << "Enter recipient username: ";
+            std::string recipient;
+            std::getline(std::cin, recipient);
+            std::cout << "Enter recipient's public key (base64): ";
+            std::string recipientPubKey;
+            std::getline(std::cin, recipientPubKey);
+            client.sendSymmetricKey(recipient, recipientPubKey);
+            break;
+        }
+        default:
+            std::cout << "Invalid choice. Please try again.\n";
+            break;
+        }
+    }
+    return 0;
 }

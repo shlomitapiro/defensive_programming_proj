@@ -14,6 +14,7 @@
 #include <ws2tcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
+
 Client::Client()
     : _rsaPrivate() {
 
@@ -64,19 +65,19 @@ std::tuple<std::string, unsigned short> Client::readServerInfo() {
                     serverPort = static_cast<unsigned short>(std::stoi(portStr));
                 }
                 catch (...) {
-                    std::cerr << "⚠ Warning: invalid port in server.info, using default 1234.\n";
+                    std::cerr << "Warning: invalid port in server.info, using default 1234.\n";
                     serverPort = 1234;
                 }
             }
             else {
-                std::cerr << "⚠ Warning: server.info missing ':' separator, using default 127.0.0.1:1234.\n";
+                std::cerr << "Warning: server.info missing ':' separator, using default 127.0.0.1:1234.\n";
             }
         }
         serverFile.close();
     }
     else {
-        std::cerr << "⚠ Warning: Could not open " << serverFilePath
-            << "! Using default 127.0.0.1:1234" << std::endl;
+        std::cerr << "Warning: Could not open " << serverFilePath
+            << "Using default 127.0.0.1:1234" << std::endl;
     }
     return { serverIp, serverPort };
 }
@@ -122,39 +123,30 @@ std::vector<uint8_t> Client::buildRegistrationPayload(const std::string& usernam
 }
 
 
-// מעדכן את _clientId מתוך תגובת השרת (16 בתים ראשונים)
+// מעדכן את _clientId מתוך תגובת השרת (16 בתים ראשונים)*********************///////////////////***********
 bool Client::updateClientIdFromResponse(const std::vector<uint8_t>& response) {
     if (response.size() < 16) {
         return false;
     }
     _clientId = std::string(response.begin(), response.begin() + 16);
-    std::cout << "Registration successful. New client ID: " << _clientId << std::endl;
+    std::cout << "ClientID successfully updated" << "\n";
     return true;
 }
 
 // כותב את פרטי הרישום לקובץ my.info
-bool Client::writeRegistrationInfoToFile(const std::string& username) {
-
-    char exePath[MAX_PATH];
-    GetModuleFileNameA(NULL, exePath, MAX_PATH);
-    std::string exeDir = std::string(exePath);
-    exeDir = exeDir.substr(0, exeDir.find_last_of("\\/"));
-
-    std::string meInfoFilePath = exeDir + "\\me.info";
-
-    // שלב 3: אם הקובץ כבר קיים, החזר שגיאה (לפי דרישות המטלה)
-    if (std::filesystem::exists(meInfoFilePath)) {
-        std::cerr << "Error: my.info already exists!" << std::endl;
-        return false;
-    }
-
+bool Client::writeRegistrationInfoToFile(const std::string& username, const std::string& fileName) {
+	std::string exePath = createFileInExeDir(fileName);
     // שלב 4: פתיחת הקובץ לכתיבה
-    std::ofstream meInfoFile(meInfoFilePath);
-    if (!meInfoFile.is_open()) {
-        std::cerr << "Error: Unable to open my.info for writing at: "
-            << meInfoFilePath << std::endl;
-        return false;
-    }
+	if (exePath == "") {
+		std::cerr << "Error: Unable to create file: " << fileName << std::endl;
+		return false;
+	}
+    
+	std::ofstream meInfoFile(exePath);
+	if (!meInfoFile.is_open()) {
+		std::cerr << "Error: Unable to open file: " << fileName << std::endl;
+		return false;
+	}
 
     // שלב 5: כתיבת 3 השורות לפי דרישות המטלה
     // 1) שם המשתמש
@@ -180,6 +172,13 @@ bool Client::writeRegistrationInfoToFile(const std::string& username) {
 // -------------------
 
 bool Client::registerClient(const std::string& username) {
+
+	// if me.info already exists, return false
+	if (!checkMeInfoFileExists()) {
+		std::cerr << "Error: me.info already exists! could not add the new user" << std::endl;
+		return false;
+	}
+
     // שלב 1: בניית ה-payload לרישום
     std::vector<uint8_t> requestPayload = buildRegistrationPayload(username);
 
@@ -194,13 +193,13 @@ bool Client::registerClient(const std::string& username) {
         std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error parsing response: " << e.what() << std::endl;
+        std::cerr << "server responded with an error: " << e.what() << std::endl;
         return false;
     }
 
     // בדיקת קוד התגובה:
     if (respCode != 2100) {
-        std::cerr << "Registration failed: "
+        std::cerr << "server responded with an error:"
             << std::string(respPayload.begin(), respPayload.end())
             << std::endl;
         return false;
@@ -214,10 +213,10 @@ bool Client::registerClient(const std::string& username) {
 
     // שלב 4: עדכון מזהה הלקוח _clientId מתוך 16 הבתים הראשונים של ה-payload
     _clientId = std::string(respPayload.begin(), respPayload.begin() + 16);
-	std::cout << "Registration of a new client ended successfully." << std::endl;
+	std::cout << "Registration of a new user ended successfully." << std::endl;
 
     // שלב 5: כתיבת פרטי הרישום לקובץ my.info
-    if (!writeRegistrationInfoToFile(username)) {
+    if (!writeRegistrationInfoToFile(username, "me.info")) {
 		return false;
     }
 
@@ -229,18 +228,85 @@ bool Client::registerClient(const std::string& username) {
 void Client::requestClientsList() {
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(601, {});
     if (response.empty()) {
-        std::cerr << "Failed to request clients list!" << std::endl;
+        std::cerr << "No response received for clients list!\n";
         return;
     }
-    std::cout << "Clients list:\n" << std::string(response.begin(), response.end()) << std::endl;
+
+    uint8_t version;
+    uint16_t code;
+    std::vector<uint8_t> payload;
+    std::tie(version, code, payload) = Protocol::parseResponse(response);
+
+    if (code != 2101) {
+        std::cerr << "Error: server responded with code " << code << "\n";
+        return;
+    }
+
+    const size_t RECORD_SIZE = 16 + 255; // 271
+    size_t count = payload.size() / RECORD_SIZE;
+
+    std::cout << "Clients list:\n";
+
+    // נניח שהגדרת map גלובלי/חברי במחלקה:
+    userMap.clear(); // ריקון המפה הקודמת
+
+    for (size_t i = 0; i < count; i++) {
+        size_t offset = i * RECORD_SIZE;
+        const uint8_t* recordPtr = payload.data() + offset;
+
+        // 16 בתים עבור ID (נניח בינארי)
+        std::string idRaw(reinterpret_cast<const char*>(recordPtr), 16);
+
+        // המרה ל-hex (אורך 32 תווים)
+        std::string idHex = bytesToHex(idRaw);
+
+        // 255 בתים לשם
+        std::string userName(reinterpret_cast<const char*>(recordPtr + 16), 255);
+        userName = userName.c_str();
+
+        std::cout << "  " << userName << "\n";
+
+        // שמירת המיפוי
+        userMap[userName] = idRaw;
+    }
 }
 
-// בקשת מפתח ציבורי ממשתמש אחר
-std::string Client::getPublicKey(const std::string& recipient) {
-    std::vector<uint8_t> requestPayload(recipient.begin(), recipient.end());
+std::string Client::getPublicKey(const std::string& userName) {
+    // אם המפה ריקה, טען אותה אוטומטית
+    if (userMap.empty()) {
+        updateUserMap();
+    }
+
+    auto it = userMap.find(userName);
+    if (it == userMap.end()) {
+        std::cerr << "No ID found for user: " << userName << "\n";
+        return "";
+    }
+    // קבלת ה-ID כערך raw (16 בתים) ישירות מהמפה
+    std::string idBytes = it->second;
+
+    // שלח בקשה 602 עם ה-ID (כ-raw bytes)
+    std::vector<uint8_t> requestPayload(idBytes.begin(), idBytes.end());
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(602, requestPayload);
-    return response.empty() ? "" : std::string(response.begin(), response.end());
+    if (response.empty()) {
+        std::cerr << "No response from server for getPublicKey\n";
+        return "";
+    }
+
+    uint8_t respVersion;
+    uint16_t respCode;
+    std::vector<uint8_t> respPayload;
+    std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
+
+    if (respCode != 2102) {
+        std::cerr << "Server error code: " << respCode << "\n";
+        return "";
+    }
+    // הנחת עבודה: המפתח הציבורי מוחזר כבייטים, נרצה להמיר אותו ל־Base64 להצגה קריאה
+    std::string pubKeyBin(reinterpret_cast<char*>(respPayload.data()), respPayload.size());
+    return Base64Wrapper::encode(pubKeyBin);
 }
+
 
 // שליחת מפתח סימטרי למשתמש אחר
 void Client::sendSymmetricKey(const std::string& recipient, const std::string& publicKey) {
@@ -296,10 +362,42 @@ std::vector<uint8_t> Client::sendRequestAndReceiveResponse(uint16_t requestCode,
     return socketWrapper.receiveAll();
 }
 
-// Implement the << operator for Client class
-std::ostream& operator<<(std::ostream& os, const Client& client) {
-    os << "Client ID: " << client._clientId << "\n";
-    os << "Server IP: " << client._serverIp << "\n";
-    os << "Server Port: " << client._serverPort << "\n";
-    return os;
+// פונקציה לעדכון המפה
+void Client::updateUserMap() {
+    std::vector<uint8_t> response = sendRequestAndReceiveResponse(601, {});
+    if (response.empty()) {
+        std::cerr << "Failed to load clients list automatically.\n";
+        return;
+    }
+
+    uint8_t version;
+    uint16_t code;
+    std::vector<uint8_t> payload;
+
+    std::tie(version, code, payload) = Protocol::parseResponse(response);
+
+    if (code != 2101) {
+        std::cerr << "Error: server responded with code " << code << "\n";
+        return;
+    }
+
+    const size_t RECORD_SIZE = 16 + 255; // כל רשומה: 16 בתים ID + 255 בתים שם
+    size_t count = payload.size() / RECORD_SIZE;
+
+    userMap.clear();
+    for (size_t i = 0; i < count; i++) {
+        size_t offset = i * RECORD_SIZE;
+        const uint8_t* recPtr = payload.data() + offset;
+
+        // קבלת ה־ID כ־16 בתים (raw bytes)
+        std::string idBin(reinterpret_cast<const char*>(recPtr), 16);
+
+        // קבלת שם המשתמש (255 בתים), חיתוך עד null-terminator
+        std::string userName(reinterpret_cast<const char*>(recPtr + 16), 255);
+        userName = userName.c_str();
+
+        // שמירת ה־ID כ־raw bytes ישירות במפה
+        userMap[userName] = idBin;
+
+    }
 }

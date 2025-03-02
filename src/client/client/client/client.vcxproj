@@ -135,9 +135,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\..\..\cryptopp_wrapper\cryptopp_wrapper\cryptopp_wrapper\AESWrapper.cpp" />
     <ClCompile Include="..\..\..\..\..\..\cryptopp_wrapper\cryptopp_wrapper\cryptopp_wrapper\Base64Wrapper.cpp" />
-    <ClCompile Include="..\..\..\..\..\..\cryptopp_wrapper\cryptopp_wrapper\cryptopp_wrapper\main.cpp" />
     <ClCompile Include="..\..\..\..\..\..\cryptopp_wrapper\cryptopp_wrapper\cryptopp_wrapper\RSAWrapper.cpp" />
     <ClCompile Include="client.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="protocol.cpp" />
     <ClCompile Include="SocketWrapper.cpp" />
     <ClCompile Include="utils.cpp" />
