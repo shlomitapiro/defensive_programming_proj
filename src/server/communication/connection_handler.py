@@ -9,14 +9,12 @@ from data.message_manager import MessageManager
 class ConnectionHandler:
     def __init__(self, client_socket: socket.socket, client_address: tuple[str, int], 
                  client_manager: ClientManager, message_manager: MessageManager) -> None:
-        """Handles a single client connection."""
         self.client_socket: socket.socket = client_socket
         self.client_address: tuple[str, int] = client_address
         self.client_manager: ClientManager = client_manager
         self.message_manager: MessageManager = message_manager
 
     def handle(self) -> None:
-        """Handles incoming requests from the client."""
         try:
             logging.debug("Entering handle() for client %s", self.client_address)
             data: bytes = self.client_socket.recv(1024)
@@ -27,10 +25,10 @@ class ConnectionHandler:
             
             # שימוש ב-parse_request המעודכן
             client_id, version, request_code, payload = Protocol.parse_request(data)
-
-            if client_id and request_code != 600:
+        
+            if client_id and request_code not in [600, 601, 602, 603, 604]:
                 return self.send_response(9000, b"Invalid request format")
-                
+
             if request_code == 600:
                 response = self.handle_register(client_id, payload)
             elif request_code == 601:
@@ -53,9 +51,7 @@ class ConnectionHandler:
             self.client_socket.close()
 
 
-    def handle_register(self, client_id: str, payload: bytes) -> tuple[int, bytes]:
-        """Handles client registration (Code 600) with a fixed-size payload of 415 bytes:
-        255 bytes for the username (null-terminated ASCII), and 160 bytes for the public key (binary)."""
+    def handle_register(self, client_id: bytes, payload: bytes) -> tuple[int, bytes]:
         try:
             # בדיקת אורך ה-payload
             if len(payload) > 415:
@@ -82,40 +78,30 @@ class ConnectionHandler:
             return (9000, f"server responded with an error: Failed to register: {e}".encode())
 
     def handle_client_list(self) -> tuple[int, bytes]:
-        """
-        Handles client list request (Code 601).
-        Each record: 16 bytes for ID (raw) + 255 bytes for username.
-        """
         clients: list[tuple[bytes, str]] = self.client_manager.get_all_clients()
-        # clients: list of (id_bytes, user_name)
-        print(f"Sending client list: {clients}")
-        # כעת c[0] -> bytes(16), c[1] -> str
-        # struct.pack("16s255s", c[0], c[1].encode()) -> מחזיר 16 + 255 בתים
+
         response = b"".join(
             struct.pack("16s 255s", c[0], c[1].encode())
             for c in clients
         )
+
+        if not response:
+            return (9000, b"server responded with an error: No clients found")
         return (2101, response)
     
     def handle_get_public_key(self, payload: bytes) -> tuple[int, bytes]:
-        """
-        Handles fetching a client's public key (Code 602).
-        Expects a 16-byte payload (raw bytes).
-        """
+
         try:
             if len(payload) < 16:
                 return (9000, b"server responded with an error: Invalid ID length")
             
-            client_id_bytes = payload[:16]  # 16 בתים גולמיים
-            print(f"Fetching public key for client {client_id_bytes}...")
+            client_id_bytes = payload[:16]
 
             public_key = self.client_manager.get_public_key(client_id_bytes)
 
-            print(f"Public key for client {client_id_bytes}: {public_key}")
             if not public_key:
                 return (9000, b"server responded with an error: Client not found")
-            
-            # מחזירים 2102, רק את המפתח הציבורי (או struct.pack אם תרצה לצרף עוד שדות)
+            print("Returning public key to client.")
             return (2102, public_key)
         
         except Exception as e:
