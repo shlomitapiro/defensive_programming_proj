@@ -42,13 +42,13 @@ class ConnectionHandler:
             elif request_code == 604:
                 response = self.handle_fetch_messages(client_id)
             else:
-                response = (9000, b"Unknown request code")
+                response = (9000, b"server responded with an error: Unknown request code")
 
             self.send_response(*response)
 
         except Exception as e:
             logging.exception(f"Exception in handle() for client {self.client_address}: {e}")
-            self.send_response(9000, b"Server error in handle()")
+            self.send_response(9000, b"server responded with an error: Server error in handle()")
         finally:
             self.client_socket.close()
 
@@ -59,57 +59,67 @@ class ConnectionHandler:
         try:
             # בדיקת אורך ה-payload
             if len(payload) > 415:
-                return (9000, b"Registration payload too short")
+                return (9000, b"server responded with an error: Registration payload too short")
 
-            # 255 בתים לשם
             name_bytes = payload[:255]
-            # 160 בתים למפתח הציבורי
+ 
             pubkey_bytes = payload[255:415]
 
-            # המרת name_bytes למחרוזת עד ה-null terminator
             name_str = name_bytes.split(b'\0', 1)[0].decode('ascii', errors='ignore')
 
-            # בדיקת האם השם כבר קיים
             if self.client_manager.client_exists_by_username(name_str):
-                return (9000, b"Username already taken")
+                return (9000, b"server responded with an error: Username already taken")
             
-            # יצירת מזהה לקוח חדש (16 בתים). אפשר להשתמש ב-uuid.uuid4().bytes
             new_id_bytes = uuid.uuid4().bytes  # 16 bytes (random)
 
-            # ניתן גם לשמור את ה-16 בתים במצב bin או להמיר ל-hex
-            # לצורך הטבלה (אם הטבלה דורשת טקסט), אפשר:
-            #   new_id_str = new_id_bytes.hex()
-            #   self.client_manager.add_client(new_id_str, name_str, pubkey_bytes)
-            # אך אם ID מוגדר כ-TEXT, יש לשמור new_id_str. אם ID מוגדר כ-BLOB, אפשר לשמור new_id_bytes.
-            new_id_str = new_id_bytes.hex()  # אם בטבלה מוגדר כ-TEXT, נשמור hex
+            #new_id_str = new_id_bytes.hex()  
 
-            # הוספת הלקוח למסד הנתונים
-            self.client_manager.add_client(new_id_str, name_str, pubkey_bytes)
+            self.client_manager.add_client(new_id_bytes, name_str, pubkey_bytes)
             
-            # החזרת תשובת הצלחה (2100) עם 16 בתים של client_id
-            # הערה: אם client_id שלך הוא מחרוזת ASCII, המרת ל-16 בתים (או שמור את client_id כ-16 בתים)
             return (2100, new_id_bytes)  
           
         except Exception as e:
-            return (9000, f"Failed to register: {e}".encode())
-
+            return (9000, f"server responded with an error: Failed to register: {e}".encode())
 
     def handle_client_list(self) -> tuple[int, bytes]:
-        """Handles client list request (Code 601)."""
-        clients: list[tuple[str, str]] = self.client_manager.get_all_clients()
-        response: bytes = b"".join(struct.pack("16s 255s", c[0].encode(), c[1].encode()) for c in clients)
+        """
+        Handles client list request (Code 601).
+        Each record: 16 bytes for ID (raw) + 255 bytes for username.
+        """
+        clients: list[tuple[bytes, str]] = self.client_manager.get_all_clients()
+        # clients: list of (id_bytes, user_name)
+        print(f"Sending client list: {clients}")
+        # כעת c[0] -> bytes(16), c[1] -> str
+        # struct.pack("16s255s", c[0], c[1].encode()) -> מחזיר 16 + 255 בתים
+        response = b"".join(
+            struct.pack("16s 255s", c[0], c[1].encode())
+            for c in clients
+        )
         return (2101, response)
-
+    
     def handle_get_public_key(self, payload: bytes) -> tuple[int, bytes]:
-        """Handles fetching a client's public key (Code 602)."""
+        """
+        Handles fetching a client's public key (Code 602).
+        Expects a 16-byte payload (raw bytes).
+        """
         try:
-            client_id: str = payload.decode()
-            public_key: bytes | None = self.client_manager.get_public_key(client_id)
+            if len(payload) < 16:
+                return (9000, b"server responded with an error: Invalid ID length")
+            
+            client_id_bytes = payload[:16]  # 16 בתים גולמיים
+            print(f"Fetching public key for client {client_id_bytes}...")
+
+            public_key = self.client_manager.get_public_key(client_id_bytes)
+
+            print(f"Public key for client {client_id_bytes}: {public_key}")
             if not public_key:
-                return (9000, b"Client not found")
-            return (2102, struct.pack("16s 160s", client_id.encode(), public_key))
+                return (9000, b"server responded with an error: Client not found")
+            
+            # מחזירים 2102, רק את המפתח הציבורי (או struct.pack אם תרצה לצרף עוד שדות)
+            return (2102, public_key)
+        
         except Exception as e:
-            return (9000, f"Failed to fetch public key: {e}".encode())
+            return (9000, f"server responded with an error: Failed to fetch public key: {e}".encode())
 
     def handle_send_message(self, payload: bytes) -> tuple[int, bytes]:
         """Handles sending a message (Code 603)."""
@@ -125,20 +135,20 @@ class ConnectionHandler:
                                              message_type, content)
             return (2103, struct.pack("16s I", to_client.encode(), 1))  # Message ID placeholder
         except Exception as e:
-            return (9000, f"Failed to send message: {e}".encode())
+            return (9000, f"server responded with an error: Failed to send message: {e}".encode())
 
     def handle_fetch_messages(self, client_id: str) -> tuple[int, bytes]:
         """Handles fetching waiting messages (Code 604)."""
         try:
             if not self.client_manager.client_exists_by_id(client_id):
-                return (9000, b"Client not found")
+                return (9000, b"server responded with an error: Client not found")
             messages: list[tuple[int, str, int, bytes]] = self.message_manager.get_messages_for_client(client_id)
             response: bytes = b"".join(struct.pack("16s I B I", msg[1].encode(), msg[0], msg[2], len(msg[3])) + msg[3] for msg in messages)
             for msg in messages:
                 self.message_manager.delete_message(msg[0])
             return (2104, response)
         except Exception as e:
-            return (9000, f"Failed to fetch messages: {e}".encode())
+            return (9000, f"server responded with an error: Failed to fetch messages: {e}".encode())
 
     def send_response(self, response_code: int, payload: bytes) -> None:
         """Sends a response using the updated Protocol.create_response."""
@@ -147,3 +157,7 @@ class ConnectionHandler:
             self.client_socket.sendall(response)
         except Exception as e:
             print(f"Error sending response to {self.client_address}: {e}")
+    
+    def get_public_key_by_id(self, client_id: str) -> bytes | None:
+        """Fetches the public key of a client by ID."""
+        return self.client_manager.get_public_key(client_id)

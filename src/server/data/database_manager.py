@@ -12,7 +12,7 @@ class DatabaseManager:
 
             # Create clients table
             cursor.execute('''CREATE TABLE IF NOT EXISTS clients (
-                                ID TEXT PRIMARY KEY,
+                                ID BOLD PRIMARY KEY,
                                 UserName TEXT NOT NULL UNIQUE,
                                 PublicKey BLOB NOT NULL,
                                 LastSeen TEXT
