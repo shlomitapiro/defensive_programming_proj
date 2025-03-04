@@ -32,26 +32,24 @@ class DatabaseManager:
             conn.commit()
 
     def execute_query(self, query: str, params=()):
-        """Executes a given query without fetching results."""
         try:
             with sqlite3.connect(self.db_name) as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
                 conn.commit()
         except sqlite3.Error as e:
-            print(f"Error executing query: {e}")
+            raise Exception(f"Error executing query: {e}")
 
     def fetch_query(self, query: str, params=()):
-        """Executes a given query and fetches results."""
         try:
             with sqlite3.connect(self.db_name) as conn:
                 cursor = conn.cursor()
                 cursor.execute(query, params)
                 return cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"Error fetching query: {e}")
-            return None
-        
+            raise Exception(f"Error fetching query: {e}")
+
+
     def _ensure_database_file_exists(self):
         """Creates the database file if it does not exist."""
         if not os.path.exists(self.db_name):
