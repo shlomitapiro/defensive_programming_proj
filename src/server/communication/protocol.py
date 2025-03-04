@@ -1,9 +1,32 @@
 import struct
 
+''' Protocol class is used to create and parse request from client to server and response from server to client.
+    The Protocol class is used by both client and server to create and parse request and response.
+    The request and response are in the following format:
+
+    Request:
+    - Client ID: 16 bytes
+    - Version: 1 byte
+    - Request Code: 2 bytes
+    - Payload Size: 4 bytes
+    - Payload: variable length
+
+    Response:
+    - Version: 1 byte
+    - Response Code: 2 bytes
+    - Payload Size: 4 bytes
+    - Payload: variable length
+    
+    The create_request method takes client_id, version, request_code and payload as input and returns serialized request.
+    The parse_request method takes serialized request as input and returns client_id, version, request_code and payload.
+    The create_response method takes version, response_code and payload as input and returns serialized response.
+    The parse_response method takes serialized response as input and returns version, response_code and payload.  
+'''
+
 class Protocol:
-    # השתמש בסימן "<" כדי להבטיח סדר little-endian בכל הפעולות.
-    REQUEST_HEADER_FORMAT = "<16s B H I"  # 16 בתים ל־Client ID, 1 בית לגרסה, 2 בתים לקוד הבקשה, 4 בתים לגודל ה-payload
-    RESPONSE_HEADER_FORMAT = "<B H I"     # 1 בית לגרסה, 2 בתים לקוד התגובה, 4 בתים לגודל ה-payload
+
+    REQUEST_HEADER_FORMAT = "<16s B H I"
+    RESPONSE_HEADER_FORMAT = "<B H I"
 
     @staticmethod
     def create_request(client_id: bytes, version: int, request_code: int, payload: bytes) -> bytes:
@@ -18,7 +41,6 @@ class Protocol:
 
     @staticmethod
     def parse_request(data: bytes) -> tuple[bytes, int, int, bytes]:
-
         header_size = struct.calcsize(Protocol.REQUEST_HEADER_FORMAT)
         if len(data) < header_size:
             raise ValueError("Data too short for header")
