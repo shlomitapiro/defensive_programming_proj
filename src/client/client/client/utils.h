@@ -13,5 +13,6 @@
 
 // פונקציית עזר שממירה buffer בינארי (16 בתים) למחרוזת Hex באורך 32 תווים.
 std::string bytesToHex(const std::string& bytes);
-bool checkMeInfoFileExists();
+bool checkMeInfoFileMissing();
 std::string createFileInExeDir(const std::string& fileName);
+std::string trim(const std::string& s);

@@ -1,4 +1,4 @@
-#define NOMINMAX
+﻿#define NOMINMAX
 #include "Client.h"
 #include "utils.h"
 #include <limits>
@@ -70,7 +70,7 @@ int main() {
                 std::cout << "Public key not found.\n";
             }
             else {
-                std::cout << "Public key for " << recipient << ": " << pubKey << "\n";
+                std::cout << "Public key for " << recipient << " has been received" << "\n";
             }
             break;
         }
@@ -92,16 +92,19 @@ int main() {
             std::cout << "Enter recipient username for symmetric key request: ";
             std::string recipient;
             std::getline(std::cin, recipient);
-            client.sendMessage(recipient, "symmetric key request");
+            client.sendSymmetricKeyRequest(recipient);
             break;
         }
         case 152: {
             std::cout << "Enter recipient username: ";
             std::string recipient;
             std::getline(std::cin, recipient);
-            std::cout << "Enter recipient's public key (base64): ";
-            std::string recipientPubKey;
-            std::getline(std::cin, recipientPubKey);
+            // קבלת המפתח הציבורי באופן אוטומטי מהשרת:
+            std::string recipientPubKey = client.getPublicKey(recipient);
+            if (recipientPubKey.empty()) {
+                std::cout << "Public key for recipient not found. Please try again.\n";
+                break;
+            }
             client.sendSymmetricKey(recipient, recipientPubKey);
             break;
         }

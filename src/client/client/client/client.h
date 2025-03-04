@@ -4,6 +4,8 @@
 #include <vector>
 #include <tuple>
 #include <unordered_map>
+#include <algorithm>
+#include <cctype>
 #include "AESWrapper.h"
 #include "RSAWrapper.h"
 #include "Protocol.h"
@@ -20,14 +22,18 @@ public:
     void sendSymmetricKey(const std::string& recipient, const std::string& publicKey);
     void sendMessage(const std::string& recipient, const std::string& message);
     void fetchMessages();
+
+    void sendSymmetricKeyRequest(const std::string& recipient);
+
     std::vector<uint8_t> sendRequestAndReceiveResponse(uint16_t requestCode, const std::vector<uint8_t>& payload);
 
 private:
     // פונקציות עזר לפרוצדורת הרישום
     std::vector<uint8_t> buildRegistrationPayload(const std::string& username);
     bool updateClientIdFromResponse(const std::vector<uint8_t>& response);
-    bool writeRegistrationInfoToFile(const std::string& username, const std::string& filePath);
+    //bool writeRegistrationInfoToFile(const std::string& username, const std::string& filePath);
     void updateUserMap();
+    void writeRegistrationInfoToFile(const std::string& username, const std::string& fileName);
 
     // משתנים פרטיים
     std::tuple<std::string, unsigned short> serverInfo;

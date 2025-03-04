@@ -1,6 +1,7 @@
 ﻿#include "Protocol.h"
 #include <cstring>
 
+
 // יוצר בקשה לפי הפורמט.
 // המחרוזת clientId מתוקנת כך שתהיה בדיוק 16 בתים – אם קצרה, מתמלאת בתווים null, ואם ארוכה, נחתכת.
 std::vector<uint8_t> Protocol::createRequest(const std::string& clientId, uint8_t version, uint16_t code, const std::vector<uint8_t>& payload) {
@@ -59,7 +60,7 @@ std::vector<uint8_t> Protocol::createResponse(uint8_t version, uint16_t response
 }
 
 // מנתח תגובה ומחזיר tuple: (גרסה, קוד תגובה, payload).
-std::tuple<uint8_t, uint16_t, std::vector<uint8_t>> Protocol::parseResponse(const std::vector<uint8_t>& data) {
+/*std::tuple<uint8_t, uint16_t, std::vector<uint8_t>> Protocol::parseResponse(const std::vector<uint8_t>& data) {
     uint8_t version = 0;
     uint16_t responseCode = 0;
     std::vector<uint8_t> payload;
@@ -82,4 +83,28 @@ std::tuple<uint8_t, uint16_t, std::vector<uint8_t>> Protocol::parseResponse(cons
 
     payload.insert(payload.end(), data.begin() + headerSize, data.begin() + headerSize + payloadSize);
     return std::make_tuple(version, responseCode, payload);
+}*/
+
+std::tuple<uint8_t, uint16_t, std::vector<uint8_t>> Protocol::parseResponse(const std::vector<uint8_t>& data) {
+    const size_t headerSize = 7; // 1 + 2 + 4
+    if (data.size() < headerSize) {
+        throw std::runtime_error("Data too short for response header");
+    }
+
+    uint8_t version = data[0];
+    uint16_t responseCode = data[1] | (data[2] << 8);
+    uint32_t payloadSize = 0;
+    for (int i = 0; i < 4; i++) {
+        payloadSize |= (data[3 + i] << (8 * i));
+    }
+
+    if (data.size() < headerSize + payloadSize) {
+        throw std::runtime_error("Incomplete response: Expected payload size " +
+            std::to_string(payloadSize) + ", but got " +
+            std::to_string(data.size() - headerSize));
+    }
+
+    std::vector<uint8_t> payload(data.begin() + headerSize, data.begin() + headerSize + payloadSize);
+    return std::make_tuple(version, responseCode, payload);
 }
+

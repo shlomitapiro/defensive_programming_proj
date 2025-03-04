@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include <tuple>
+#include <stdexcept>
 
 class Protocol {
 public:
