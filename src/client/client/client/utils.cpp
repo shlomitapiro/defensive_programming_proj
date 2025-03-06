@@ -28,7 +28,8 @@ std::string createFileInExeDir(const std::string& fileName)
     std::string filePath = exeDir + "\\" + fileName;
     std::ofstream file(filePath);
     if (!file.is_open()) {
-        return "";  // Return empty string if file creation fails.
+        throw std::runtime_error("Unable to create file: " + filePath);
+       //return "";  // Return empty string if file creation fails.
     }
     file.close();
     return filePath;
@@ -57,7 +58,13 @@ std::string adjustToSize(const std::string& str, size_t size) {
 
 std::string getExeDirectory() {
     char exePath[MAX_PATH] = { 0 };
-    GetModuleFileNameA(NULL, exePath, MAX_PATH);
+    if (GetModuleFileNameA(NULL, exePath, MAX_PATH) == 0) {
+        throw std::runtime_error("GetModuleFileNameA failed");
+    }
     std::string path(exePath);
-    return path.substr(0, path.find_last_of("\\/"));
+    size_t pos = path.find_last_of("\\/");
+    if (pos == std::string::npos) {
+        throw std::runtime_error("Failed to determine executable directory");
+    }
+    return path.substr(0, pos);
 }

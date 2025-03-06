@@ -65,7 +65,8 @@ std::vector<uint8_t> Client::buildRegistrationPayload(const std::string& usernam
     std::string pubKeyBin = pubKeyRaw;
 
     if (pubKeyBin.size() < 160) {
-        std::cerr << "Error: Public key is too short"<< std::endl;
+        //std::cerr << "Error: Public key is too short"<< std::endl;
+		throw std::runtime_error("Public key is too short");
         return {};
     }
     if (pubKeyBin.size() > 160) {
@@ -85,7 +86,8 @@ std::vector<uint8_t> Client::buildRegistrationPayload(const std::string& usernam
     payload.insert(payload.end(), pubKeyBin.begin(), pubKeyBin.end());
 
     if (payload.size() != REGISTRATION_PAYLOAD_SIZE) {
-        std::cerr << "Error: Registration payload size is incorrect" << std::endl;
+        //std::cerr << "Error: Registration payload size is incorrect" << std::endl;
+		throw std::runtime_error("Registration payload size is incorrect");
         return {};
     }
     return payload;
@@ -121,7 +123,8 @@ void Client::writeRegistrationInfoToFile(const std::string& username, const std:
 // -----------------------------
 bool Client::registerClient(const std::string& username) {
     if (!checkMeInfoFileMissing()) {
-        std::cerr << "Error: me.info already exists! Could not add a new user." << std::endl;
+        //std::cerr << "Error: me.info already exists! Could not add a new user." << std::endl;
+        throw std::runtime_error("me.info already exists! Could not add a new user.");
         return false;
     }
 
@@ -135,15 +138,18 @@ bool Client::registerClient(const std::string& username) {
         std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     }
     catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        //std::cerr << e.what() << std::endl;
+		throw std::runtime_error(e.what());
         return false;
     }
     if (respCode != 2100) {
-        std::cerr << std::string(respPayload.begin(), respPayload.end()) << std::endl;
+        //std::cerr << std::string(respPayload.begin(), respPayload.end()) << std::endl;
+        throw std::runtime_error("Registration failed");
         return false;
     }
     if (respPayload.size() < CLIENT_ID_SIZE) {
-        std::cerr << "Error: Response payload is too short" << std::endl;
+        //std::cerr << "Error: Response payload is too short" << std::endl;
+        throw std::runtime_error("Response payload is too short!");
         return false;
     }
     _clientId = std::string(respPayload.begin(), respPayload.begin() + CLIENT_ID_SIZE);
@@ -155,7 +161,8 @@ bool Client::registerClient(const std::string& username) {
 void Client::requestClientsList() {
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(601, {});
     if (response.empty()) {
-        std::cerr << "No response received for clients list!\n";
+        //std::cerr << "No response received for clients list!\n";
+		throw std::runtime_error("No response received for clients list!");
         return;
     }
     uint8_t version;
@@ -163,7 +170,8 @@ void Client::requestClientsList() {
     std::vector<uint8_t> payload;
     std::tie(version, code, payload) = Protocol::parseResponse(response);
     if (code != 2101) {
-        std::cerr << "Error: server responded with code " << code << "\n";
+        //std::cerr << "Error: server responded with code " << code << "\n";
+		throw std::runtime_error("Server responded with code " + std::to_string(code));
         return;
     }
     const size_t RECORD_SIZE = CLIENT_ID_SIZE + USERNAME_SIZE; // 16 + 255 = 271 bytes
@@ -188,14 +196,16 @@ std::string Client::getPublicKey(const std::string& userName) {
     }
     auto it = userMap.find(userName);
     if (it == userMap.end()) {
-        std::cerr << "No ID found for user: " << userName << "\n";
+        //std::cerr << "No ID found for user: " << userName << "\n";
+		throw std::runtime_error("No ID found for user: " + userName);
         return "";
     }
     std::string idBytes = it->second;
     std::vector<uint8_t> requestPayload(idBytes.begin(), idBytes.end());
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(602, requestPayload);
     if (response.empty()) {
-        std::cerr << "No response from server\n";
+        //std::cerr << "No response from server\n";
+		throw std::runtime_error("No response from server");
         return "";
     }
     uint8_t respVersion;
@@ -203,7 +213,8 @@ std::string Client::getPublicKey(const std::string& userName) {
     std::vector<uint8_t> respPayload;
     std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     if (respCode != 2102) {
-        std::cerr << "Server error code: " << respCode << "\n";
+        //std::cerr << "Server error code: " << respCode << "\n";
+		throw std::runtime_error("Server error code: " + std::to_string(respCode));
         return "";
     }
     // Convert the raw public key to Base64 for display.
@@ -215,7 +226,8 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
     // Retrieve and adjust the recipient's client ID (16 bytes).
     auto it = userMap.find(recipient);
     if (it == userMap.end()) {
-        std::cerr << "Error: Recipient '" << recipient << "' not found in user list.\n";
+        //std::cerr << "Error: Recipient '" << recipient << "' not found in user list.\n";
+		throw std::runtime_error("Recipient '" + recipient + "' not found in user list.");
         return;
     }
     std::string toClientId = adjustToSize(it->second, CLIENT_ID_SIZE);
@@ -226,7 +238,8 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
     // Decode the provided public key; note that publicKey is expected to be Base64-encoded.
     std::string decodedPub = Base64Wrapper::decode(publicKey);
     if (decodedPub.size() < 160) {
-        std::cerr << "Public key is too short\n";
+        //std::cerr << "Public key is too short\n";
+		throw std::runtime_error("Public key is too short");
         return;
     }
 
@@ -238,11 +251,13 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
         encryptedKey = rsaPub.encrypt(std::string(reinterpret_cast<char*>(const_cast<unsigned char*>(aes.getKey())), AESWrapper::DEFAULT_KEYLENGTH));
     }
     catch (const CryptoPP::Exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        //std::cerr << "Error: " << e.what() << std::endl;
+		throw std::runtime_error(e.what());
         return;
     }
     catch (...) {
-        std::cerr << "Unknown error in encryption" << std::endl;
+        //std::cerr << "Unknown error in encryption" << std::endl;
+        throw std::runtime_error("Unknown error in encryption");
         return;
     }
 
@@ -263,7 +278,8 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-        std::cerr << "No response received from server.\n";
+        //std::cerr << "No response received from server.\n";
+		throw std::runtime_error("No response received from server.");
         return;
     }
     uint8_t respVersion;
@@ -271,9 +287,11 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
     std::vector<uint8_t> respPayload;
     std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     if (respCode != 2103) {
-        std::cerr << "Error: Server responded with code " << respCode <<"\n";
+        //std::cerr << "Error: Server responded with code " << respCode <<"\n";
+		throw std::runtime_error("Server responded with code " + std::to_string(respCode));
         if (!respPayload.empty()) {
-            std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
+            //std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
+			throw std::runtime_error("Server message: " + std::string(respPayload.begin(), respPayload.end()));
         }
     }
     else {
@@ -286,14 +304,16 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
     // Verify that a symmetric key exists for the recipient.
     auto symIt = _symmetricKeys.find(recipient);
     if (symIt == _symmetricKeys.end()) {
-        std::cerr << "No symmetric key for recipient '" << recipient << "'!\n";
+        //std::cerr << "No symmetric key for recipient '" << recipient << "'!\n";
+        throw std::runtime_error("No symmetric key for recipient '" + recipient + "'");
         return;
     }
 
     // Retrieve and adjust the recipient's and sender's client IDs.
     auto it = userMap.find(recipient);
     if (it == userMap.end()) {
-        std::cerr << "Error: Recipient '" << recipient << "' not found in userMap.\n";
+        //std::cerr << "Error: Recipient '" << recipient << "' not found in userMap.\n";
+        throw std::runtime_error("Recipient '" + recipient + "' not found in userMap.");
         return;
     }
     std::string toClientId = adjustToSize(it->second, CLIENT_ID_SIZE);
@@ -317,7 +337,8 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-        std::cerr << "No response from server for sendMessage.\n";
+        //std::cerr << "No response from server for sendMessage.\n";
+        throw std::runtime_error("No response from server for sendMessage.");
         return;
     }
     uint8_t respVersion;
@@ -325,7 +346,8 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
     std::vector<uint8_t> respPayload;
     std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     if (respCode != 2103) {
-        std::cerr << "Error: Server responded with code " << respCode << " for sendMessage.\n";
+        //std::cerr << "Error: Server responded with code " << respCode << " for sendMessage.\n";
+		throw std::runtime_error("Server responded with code " + std::to_string(respCode) + " for sendMessage.");
         if (!respPayload.empty()) {
             std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
         }
@@ -338,7 +360,8 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
 void Client::fetchMessages() {
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(604, {});
     if (response.empty()) {
-        std::cerr << "No response received (or empty response) from server!\n";
+        //std::cerr << "No response received (or empty response) from server!\n";
+		throw std::runtime_error("No response received (or empty response) from server!");
         return;
     }
     uint8_t version;
@@ -346,7 +369,8 @@ void Client::fetchMessages() {
     std::vector<uint8_t> payload;
     std::tie(version, code, payload) = Protocol::parseResponse(response);
     if (code != 2104) {
-        std::cerr << "Error: server responded with code " << code << " instead of 2104.\n";
+        //std::cerr << "Error: server responded with code " << code << " instead of 2104.\n";
+		throw std::runtime_error("Server responded with code " + std::to_string(code) + " instead of 2104.");
         return;
     }
 
@@ -375,7 +399,8 @@ void Client::fetchMessages() {
         offset += 4;
 
         if (offset + messageSize > payload.size()) {
-            std::cerr << "Error: message size exceeds payload. Possibly corrupted data.\n";
+            //std::cerr << "Error: message size exceeds payload. Possibly corrupted data.\n";
+			throw std::runtime_error("Message size exceeds payload. Possibly corrupted data.");
             break;
         }
         std::string content(reinterpret_cast<const char*>(&payload[offset]), messageSize);
@@ -418,7 +443,8 @@ void Client::fetchMessages() {
                     displayContent = plainText;
                 }
                 catch (const CryptoPP::Exception& e) {
-                    std::cerr << "Decryption error occurred." << std::endl;
+                    //std::cerr << "Decryption error occurred." << std::endl;
+					throw std::runtime_error(e.what());
                     displayContent = "can't decrypt message";
                 }
                 catch (...) {
@@ -454,7 +480,8 @@ std::vector<uint8_t> Client::sendRequestAndReceiveResponse(uint16_t requestCode,
 void Client::updateUserMap() {
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(601, {});
     if (response.empty()) {
-        std::cerr << "Failed to load clients list automatically.\n";
+        //std::cerr << "Failed to load clients list automatically.\n";
+		throw std::runtime_error("Failed to load clients list automatically.");
         return;
     }
     uint8_t version;
@@ -462,7 +489,8 @@ void Client::updateUserMap() {
     std::vector<uint8_t> payload;
     std::tie(version, code, payload) = Protocol::parseResponse(response);
     if (code != 2101) {
-        std::cerr << "Error: server responded with code " << code << "\n";
+        //std::cerr << "Error: server responded with code " << code << "\n";
+		throw std::runtime_error("Server responded with code " + std::to_string(code));
         return;
     }
     const size_t RECORD_SIZE = CLIENT_ID_SIZE + USERNAME_SIZE;
@@ -482,7 +510,8 @@ void Client::updateUserMap() {
 void Client::sendSymmetricKeyRequest(const std::string& recipient) {
     auto it = userMap.find(recipient);
     if (it == userMap.end()) {
-        std::cerr << "Error: Recipient '" << recipient << "' not found in user list.\n";
+        //std::cerr << "Error: Recipient '" << recipient << "' not found in user list.\n";
+		throw std::runtime_error("Recipient '" + recipient + "' not found in user list.");
         return;
     }
     std::string toClientId = adjustToSize(it->second, CLIENT_ID_SIZE);
@@ -503,7 +532,8 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-        std::cerr << "Error: No response received from server.\n";
+		throw std::runtime_error("No response received from server.");
+        //std::cerr << "Error: No response received from server.\n";
         return;
     }
     uint8_t respVersion;
@@ -513,13 +543,15 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
         std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error parsing response: " << e.what() << "\n";
+        //std::cerr << "Error parsing response: " << e.what() << "\n";
+		throw std::runtime_error("Error parsing response: " + std::string(e.what()));
         return;
     }
     if (respCode != 2103) {
         std::cerr << "Error: Server responded with code " << respCode <<"\n";
         if (!respPayload.empty()) {
-            std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
+            //std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
+			throw std::runtime_error("Server message: " + std::string(respPayload.begin(), respPayload.end()));
         }
         return;
     }

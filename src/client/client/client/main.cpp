@@ -32,6 +32,7 @@ static void displayMenu() {
  * @return int Returns 0 upon successful execution.
  */
 int main() {
+    try{
     Client client;
     bool registered = false;
     std::string username;
@@ -133,6 +134,13 @@ int main() {
             std::cout << "Invalid choice. Please try again.\n";
             break;
         }
-    }
+	}
+	}
+	catch (const std::exception& e) {
+		std::cerr << "An error occurred: " << e.what() << '\n';
+	}
+	catch (...) {
+		std::cerr << "An unknown error occurred.\n";
+	}
     return 0;
 }
