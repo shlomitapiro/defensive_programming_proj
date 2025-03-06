@@ -150,4 +150,4 @@ class ConnectionHandler:
             self.client_socket.sendall(response)
 
         except Exception as e:
-            print(f"Error sending response to {self.client_address}: {e}")
+            logging.error(f"Error sending response to {self.client_address}: {e}")

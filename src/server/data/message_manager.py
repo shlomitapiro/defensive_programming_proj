@@ -27,7 +27,7 @@ class MessageManager:
             print("Message added successfully to the database.")
 
         except Exception as e:
-            print(f"Error adding message: {e}")
+            raise RuntimeError(f"Database error while adding message: {e}")
 
         
     def get_messages_for_client(self, client_id) -> list[tuple]:
@@ -40,7 +40,7 @@ class MessageManager:
             return message if message else []
         
         except Exception as e:
-            print(f"Error fetching messages for client: {e}")
+            print(f"Error fetching messages: {e}")
             return []
         
 
@@ -62,4 +62,4 @@ class MessageManager:
                 print(f"Confirmed: Message {message_id} no longer exists.")
 
         except Exception as e:
-            print(f"Error deleting message: {e}")
+            raise RuntimeError(f"Database: {e}")

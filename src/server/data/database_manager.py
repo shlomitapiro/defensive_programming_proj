@@ -13,27 +13,31 @@ class DatabaseManager:
 
 
     def initialize_database(self):
-        with sqlite3.connect(self.db_name) as conn:
-            cursor = conn.cursor()
+        try:
+                
+            with sqlite3.connect(self.db_name) as conn:
+                cursor = conn.cursor()
 
-            cursor.execute('''CREATE TABLE IF NOT EXISTS clients (
-                                ID BOLD PRIMARY KEY,
-                                UserName TEXT NOT NULL UNIQUE,
-                                PublicKey BLOB NOT NULL,
-                                LastSeen TEXT
-                            )''')
+                cursor.execute('''CREATE TABLE IF NOT EXISTS clients (
+                                    ID BOLD PRIMARY KEY,
+                                    UserName TEXT NOT NULL UNIQUE,
+                                    PublicKey BLOB NOT NULL,
+                                    LastSeen TEXT
+                                )''')
 
-            cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-                                ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                                ToClient TEXT NOT NULL,
-                                FromClient TEXT NOT NULL,
-                                Type INTEGER NOT NULL,
-                                Content BLOB NOT NULL,
-                                FOREIGN KEY (ToClient) REFERENCES clients(ID),
-                                FOREIGN KEY (FromClient) REFERENCES clients(ID)
-                            )''')
+                cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
+                                    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    ToClient TEXT NOT NULL,
+                                    FromClient TEXT NOT NULL,
+                                    Type INTEGER NOT NULL,
+                                    Content BLOB NOT NULL,
+                                    FOREIGN KEY (ToClient) REFERENCES clients(ID),
+                                    FOREIGN KEY (FromClient) REFERENCES clients(ID)
+                                )''')
 
-            conn.commit()
+                conn.commit()
+        except sqlite3.Error as e:
+            raise sqlite3.DatabaseError(f"Error initializing database: {e}")
 
 
     def execute_query(self, query: str, params=()):

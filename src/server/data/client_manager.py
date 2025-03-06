@@ -23,7 +23,6 @@ class ClientManager:
         try:
             self.db_manager.execute_query(query, params)
             print(f"Client {username} added successfully.")
-
         except sqlite3.DatabaseError as e:
             raise Exception(f"Database error while adding client {username}: {e}")
         

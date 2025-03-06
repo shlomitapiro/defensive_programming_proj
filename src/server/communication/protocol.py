@@ -65,5 +65,7 @@ class Protocol:
         if len(data) < header_size:
             raise ValueError("Data too short for response header")
         version, response_code, payload_size = struct.unpack(Protocol.RESPONSE_HEADER_FORMAT, data[:header_size])
+        if len(data) < header_size + payload_size:
+            raise ValueError("Data too short for declared payload")
         payload = data[header_size:header_size + payload_size]
         return version, response_code, payload

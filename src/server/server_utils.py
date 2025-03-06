@@ -25,11 +25,18 @@ def load_port():
     except FileNotFoundError:
         logging.warning("'myport.info' not found. Using default port 1357.")
         return 1357
+    except ValueError:
+        logging.warning("Invalid port in myport.info. Using default port 1357.")
+        return 1357
 
 def init_database():
     db_manager = DatabaseManager()
-    db_manager.initialize_database()
-    return db_manager
+    try:
+        db_manager.initialize_database()
+        return db_manager
+    except Exception as e:
+        logging.exception(f"Error initializing database: {e}")
+        raise e
 
 def init_managers(db_manager):
     client_manager = ClientManager(db_manager)
@@ -37,11 +44,15 @@ def init_managers(db_manager):
     return client_manager, message_manager
 
 def init_server_socket(port: int) -> socket.socket:
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('0.0.0.0', port))
-    server_socket.listen(5)
-    logging.info(f"Server socket initialized and listening on port {port}")
-    return server_socket
+    try:
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind(('0.0.0.0', port))
+        server_socket.listen(5)
+        logging.info(f"Server socket initialized and listening on port {port}")
+        return server_socket
+    except Exception as e:
+        logging.exception("Failed to initialize server socket.")
+        raise
 
 def handle_client_connection(client_socket: socket.socket, client_address, client_manager, message_manager):
     logging.info(f"Handling connection from {client_address}")
@@ -77,6 +88,8 @@ def run_server():
         accept_connections(server_socket, client_manager, message_manager)
     except KeyboardInterrupt:
         logging.info("KeyboardInterrupt received. Shutting down server.")
+    except Exception as e:
+        logging.exception(f"Exception in run_server: {e}")
     finally:
         server_socket.close()
         logging.info("Server is shut down.")
