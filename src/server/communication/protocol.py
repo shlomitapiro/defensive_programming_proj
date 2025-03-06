@@ -43,8 +43,13 @@ class Protocol:
     def parse_request(data: bytes) -> tuple[bytes, int, int, bytes]:
         header_size = struct.calcsize(Protocol.REQUEST_HEADER_FORMAT)
         if len(data) < header_size:
-            raise ValueError("Data too short for header")
+            raise ValueError("Data too short for declared payload")
+        
         cid, version, request_code, payload_size = struct.unpack(Protocol.REQUEST_HEADER_FORMAT, data[:header_size])
+        
+        if len(data) < header_size + payload_size:
+            raise ValueError("Data too short for declared payload")
+        
         payload = data[header_size:header_size + payload_size]
         return cid, version, request_code, payload
 
