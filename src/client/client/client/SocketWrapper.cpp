@@ -74,6 +74,10 @@ std::vector<uint8_t> SocketWrapper::receiveAll() const {
         if (bytesRead < 0) {
             throw std::runtime_error("Error in recv: " + std::to_string(WSAGetLastError()));
         }
+        if (bytesRead > CHUNK_SIZE) {
+            throw std::runtime_error("recv returned too large value");
+        }
+
         response.insert(response.end(), buffer, buffer + bytesRead);
     }
 

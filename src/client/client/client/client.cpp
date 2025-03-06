@@ -1,7 +1,6 @@
 ﻿#include "utils.h"
 #include "client.h"
 
-
 // Constants for fixed field sizes
 static const size_t CLIENT_ID_SIZE = 16;
 static const size_t USERNAME_SIZE = 255;
@@ -66,7 +65,7 @@ std::vector<uint8_t> Client::buildRegistrationPayload(const std::string& usernam
     std::string pubKeyBin = pubKeyRaw;
 
     if (pubKeyBin.size() < 160) {
-        std::cerr << "Error: Public key is too short: " << pubKeyBin.size() << " bytes." << std::endl;
+        std::cerr << "Error: Public key is too short"<< std::endl;
         return {};
     }
     if (pubKeyBin.size() > 160) {
@@ -86,7 +85,7 @@ std::vector<uint8_t> Client::buildRegistrationPayload(const std::string& usernam
     payload.insert(payload.end(), pubKeyBin.begin(), pubKeyBin.end());
 
     if (payload.size() != REGISTRATION_PAYLOAD_SIZE) {
-        std::cerr << "Error: Registration payload size is incorrect: " << payload.size() << " bytes." << std::endl;
+        std::cerr << "Error: Registration payload size is incorrect" << std::endl;
         return {};
     }
     return payload;
@@ -144,7 +143,7 @@ bool Client::registerClient(const std::string& username) {
         return false;
     }
     if (respPayload.size() < CLIENT_ID_SIZE) {
-        std::cerr << "Error: Response payload is too short!" << std::endl;
+        std::cerr << "Error: Response payload is too short" << std::endl;
         return false;
     }
     _clientId = std::string(respPayload.begin(), respPayload.begin() + CLIENT_ID_SIZE);
@@ -196,7 +195,7 @@ std::string Client::getPublicKey(const std::string& userName) {
     std::vector<uint8_t> requestPayload(idBytes.begin(), idBytes.end());
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(602, requestPayload);
     if (response.empty()) {
-        std::cerr << "No response from server for getPublicKey\n";
+        std::cerr << "No response from server\n";
         return "";
     }
     uint8_t respVersion;
@@ -227,7 +226,7 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
     // Decode the provided public key; note that publicKey is expected to be Base64-encoded.
     std::string decodedPub = Base64Wrapper::decode(publicKey);
     if (decodedPub.size() < 160) {
-        std::cerr << "Public key is too short: " << decodedPub.size() << " bytes. Aborting...\n";
+        std::cerr << "Public key is too short\n";
         return;
     }
 
@@ -239,11 +238,11 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
         encryptedKey = rsaPub.encrypt(std::string(reinterpret_cast<char*>(const_cast<unsigned char*>(aes.getKey())), AESWrapper::DEFAULT_KEYLENGTH));
     }
     catch (const CryptoPP::Exception& e) {
-        std::cerr << "Crypto++ error: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return;
     }
     catch (...) {
-        std::cerr << "Unknown error in RSA encryption" << std::endl;
+        std::cerr << "Unknown error in encryption" << std::endl;
         return;
     }
 
@@ -264,7 +263,7 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-        std::cerr << "No response received from server for sendSymmetricKey.\n";
+        std::cerr << "No response received from server.\n";
         return;
     }
     uint8_t respVersion;
@@ -272,7 +271,7 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
     std::vector<uint8_t> respPayload;
     std::tie(respVersion, respCode, respPayload) = Protocol::parseResponse(response);
     if (respCode != 2103) {
-        std::cerr << "Error: Server responded with code " << respCode << " for sendSymmetricKey.\n";
+        std::cerr << "Error: Server responded with code " << respCode <<"\n";
         if (!respPayload.empty()) {
             std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
         }
@@ -419,11 +418,11 @@ void Client::fetchMessages() {
                     displayContent = plainText;
                 }
                 catch (const CryptoPP::Exception& e) {
-                    std::cerr << "Crypto++ error: " << e.what() << "\n";
-                    displayContent = "can't decrypt message (Crypto++ error)";
+                    std::cerr << "Decryption error occurred." << std::endl;
+                    displayContent = "can't decrypt message";
                 }
                 catch (...) {
-                    displayContent = "can't decrypt message (decryption error)";
+                    displayContent = "can't decrypt message";
                 }
             }
             break;
@@ -504,7 +503,7 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-        std::cerr << "Error: No response received from server for symmetric key request.\n";
+        std::cerr << "Error: No response received from server.\n";
         return;
     }
     uint8_t respVersion;
@@ -518,7 +517,7 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
         return;
     }
     if (respCode != 2103) {
-        std::cerr << "Error: Server responded with code " << respCode << " for symmetric key request.\n";
+        std::cerr << "Error: Server responded with code " << respCode <<"\n";
         if (!respPayload.empty()) {
             std::cerr << "Server message: " << std::string(respPayload.begin(), respPayload.end()) << "\n";
         }
