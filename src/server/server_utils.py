@@ -51,7 +51,7 @@ def init_server_socket(port: int) -> socket.socket:
         logging.info(f"Server socket initialized and listening on port {port}")
         return server_socket
     except Exception as e:
-        logging.exception("Failed to initialize server socket.")
+        logging.exception("Failed to initialize server socket." + str(e))
         raise
 
 def handle_client_connection(client_socket: socket.socket, client_address, client_manager, message_manager):
