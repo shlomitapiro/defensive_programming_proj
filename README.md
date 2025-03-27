@@ -3,13 +3,13 @@
 Welcome to MessageU, a secure client-server messaging application developed for an academic exercise in defensive systems programming. Below is an overview of the system’s architecture, setup instructions, and usage guidelines.
 
 ## 1. Introduction
-    MessageU is a simple end-to-end encrypted messaging platform demonstrating secure message exchange between a Python-based server and multiple C++ clients. The application is designed to:
+MessageU is a simple end-to-end encrypted messaging platform demonstrating secure message exchange between a Python-based server and multiple C++ clients. The application is designed to:
 
-    Register new users (storing public keys on the server).
+Register new users (storing public keys on the server).
 
-    Exchange public keys so that clients can share a symmetric key (AES) securely.
+Exchange public keys so that clients can share a symmetric key (AES) securely.
 
-    Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
+Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
 
 ## 2. System Architecture
         Client-Server Model:
