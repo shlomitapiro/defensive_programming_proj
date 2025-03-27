@@ -295,7 +295,7 @@ void Client::sendSymmetricKey(const std::string& recipient, const std::string& p
         }
     }
     else {
-        std::cout << "Symmetric key sent successfully to '" << recipient << "'.\n";
+        std::cout << "Symmetric key received." << "\n";
     }
 }
 
@@ -305,7 +305,7 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
     auto symIt = _symmetricKeys.find(recipient);
     if (symIt == _symmetricKeys.end()) {
         //std::cerr << "No symmetric key for recipient '" << recipient << "'!\n";
-        throw std::runtime_error("No symmetric key for recipient '" + recipient + "'");
+        throw std::runtime_error("Can't decrypt message '" + recipient + "'");
         return;
     }
 
@@ -338,7 +338,7 @@ void Client::sendMessage(const std::string& recipient, const std::string& messag
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
         //std::cerr << "No response from server for sendMessage.\n";
-        throw std::runtime_error("No response from server for sendMessage.");
+        throw std::runtime_error("server responded with an error.");
         return;
     }
     uint8_t respVersion;
@@ -361,7 +361,7 @@ void Client::fetchMessages() {
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(604, {});
     if (response.empty()) {
         //std::cerr << "No response received (or empty response) from server!\n";
-		throw std::runtime_error("No response received (or empty response) from server!");
+		throw std::runtime_error("server responded with an error");
         return;
     }
     uint8_t version;
@@ -518,7 +518,7 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
     std::string fromClientId = adjustToSize(_clientId, CLIENT_ID_SIZE);
 
     uint8_t messageType = 1; // Request for symmetric key
-    std::string requestContent = "symmetric key request";
+    std::string requestContent = "Request for symetric key";
     uint32_t contentSize = static_cast<uint32_t>(requestContent.size());
 
     std::vector<uint8_t> payload;
@@ -532,7 +532,7 @@ void Client::sendSymmetricKeyRequest(const std::string& recipient) {
 
     std::vector<uint8_t> response = sendRequestAndReceiveResponse(603, payload);
     if (response.empty()) {
-		throw std::runtime_error("No response received from server.");
+		throw std::runtime_error("server responded with an error.");
         //std::cerr << "Error: No response received from server.\n";
         return;
     }
