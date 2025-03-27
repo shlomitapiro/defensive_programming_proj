@@ -207,3 +207,33 @@ Key Management:
 - Public keys are stored on the server.
 
 - If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
+
+## 8. Project Structure
+
+A general overview of the relevant directories and files:
+
+├── server
+│   ├── main.py                     # Entry point for Python server
+│   ├── server_utils.py             # Initializes server, manages sockets
+│   ├── data
+│   │   ├── database_manager.py     # SQLite DB logic
+│   │   ├── client_manager.py       # Manages client records
+│   │   └── message_manager.py      # Manages stored/pending messages
+│   ├── communication
+│   │   ├── connection_handler.py   # Handles client connections
+│   │   └── protocol.py             # Shared protocol implementation
+│   └── config
+│       └── myport.info             # Port configuration file (optional)
+│
+├── client
+│   ├── main.cpp               # Entry point for C++ client
+│   ├── client.cpp/.h          # Main Client implementation
+│   ├── protocol.cpp/.h        # Protocol creation/parsing in C++
+│   ├── utils.cpp/.h           # Utility functions
+│   ├── RSAWrapper.cpp/.h      # RSA encryption/decryption wrappers
+│   ├── AESWrapper.cpp/.h      # AES encryption/decryption wrapper
+│   ├── Base64Wrapper.cpp/.h   # Base64 encoding/decoding
+│   ├── SocketWrapper.cpp/.h   # WinSock-based socket utility
+│   └── ...
+│
+└── defensive.db               # SQLite database file
