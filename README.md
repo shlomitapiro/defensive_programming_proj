@@ -14,11 +14,11 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 2. System Architecture
     Client-Server Model:
 
-        - A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
+        A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
 
-        - Each client connects to the server to register, send messages, or fetch waiting messages.
+        Each client connects to the server to register, send messages, or fetch waiting messages.
 
-        - Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
+        Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
 
     End-to-End Encryption:
 
