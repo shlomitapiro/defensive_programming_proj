@@ -126,9 +126,7 @@ Server Setup:
         If that file doesn’t exist or is invalid, the server uses port 1357.
 
     Running the Server:
-    '''bash
         python main.py
-    '''
 
 The server will start listening for connections and log status messages to the console.
     
@@ -150,10 +148,8 @@ Client Setup:
         Link against Crypto++.
     
     Running the Client;
-    '''bash
         ./MessageUClient.exe
-    '''
-
+    
     The client provides an interactive menu in the console.
 
 ## 6. Usage
