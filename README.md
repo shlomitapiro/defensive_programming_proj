@@ -131,26 +131,26 @@ Server Setup:
 The server will start listening for connections and log status messages to the console.
     
 Client Setup:
-    Requirements:
+Requirements:
 
-        A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
+    A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
 
-        The Crypto++ library (for RSA and AES).
+    The Crypto++ library (for RSA and AES).
 
-    Server Address:
+Server Address:
 
-        Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
+    Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
 
-    Building the Client:
+Building the Client:
 
-        Include all .cpp and .h files in the client folder in your project.
+    Include all .cpp and .h files in the client folder in your project.
 
-        Link against Crypto++.
-    
-    Running the Client;
-        ./MessageUClient.exe
-    
-    The client provides an interactive menu in the console.
+    Link against Crypto++.
+
+Running the Client;
+    ./MessageUClient.exe
+
+The client provides an interactive menu in the console.
 
 ## 6. Usage
     Client Menu:
