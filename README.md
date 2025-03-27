@@ -133,9 +133,7 @@ Requirements:
 
 Running the Server:
 
-'''bash
-python main.py
-'''
+    python main.py
 
 The server will start listening for connections and log status messages to the console.
     
@@ -159,9 +157,8 @@ Building the Client:
 
 Running the Client:
 
-'''bash
-./MessageUClient.exe
-'''
+    ./MessageUClient.exe
+
 
 The client provides an interactive menu in the console.
 
