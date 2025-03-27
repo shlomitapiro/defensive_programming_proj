@@ -132,7 +132,10 @@ Requirements:
 - If that file doesn’t exist or is invalid, the server uses port 1357.
 
 Running the Server:
-    python main.py
+
+'''bash
+python main.py
+'''
 
 The server will start listening for connections and log status messages to the console.
     
@@ -155,7 +158,10 @@ Building the Client:
 - Link against Crypto++.
 
 Running the Client:
-    ./MessageUClient.exe
+
+'''bash
+./MessageUClient.exe
+'''
 
 The client provides an interactive menu in the console.
 
