@@ -12,7 +12,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
     Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
 
 2. System Architecture
-    Client-Server Model:
+        Client-Server Model:
 
         A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
 
@@ -20,13 +20,13 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
 
-    End-to-End Encryption:
+        End-to-End Encryption:
 
         - RSA (asymmetric) is used for exchanging keys: one client encrypts a newly generated AES key with the other client’s public RSA key.
 
         - AES (symmetric) is used to encrypt actual text messages with a shared key known only to the two clients involved.
 
-    Data Storage:
+        Data Storage:
 
         - In the base version, the server keeps user and message data in memory.
 
