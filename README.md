@@ -1,8 +1,8 @@
-MessageU – Defensive Systems Programming Project
+# MessageU – Defensive Systems Programming Project
 
 Welcome to MessageU, a secure client-server messaging application developed for an academic exercise in defensive systems programming. Below is an overview of the system’s architecture, setup instructions, and usage guidelines.
 
-1. Introduction
+## 1. Introduction
     MessageU is a simple end-to-end encrypted messaging platform demonstrating secure message exchange between a Python-based server and multiple C++ clients. The application is designed to:
 
     Register new users (storing public keys on the server).
@@ -11,7 +11,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
     Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
 
-2. System Architecture
+## 2. System Architecture
         Client-Server Model:
 
         A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
@@ -33,7 +33,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
         - Optionally, the project demonstrates using an SQLite database file (e.g. defensive.db) for persistent storage.
 
 
-3. Protocol Overview
+## 3. Protocol Overview
     Communication between client and server follows a custom binary protocol over TCP.
 
     Request (client → server):
@@ -84,7 +84,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         9000: General error response
 
-4. Encryption Details
+## 4. Encryption Details
     RSA (1024-bit):
 
         Used for exchanging the symmetric key.
@@ -126,7 +126,9 @@ Welcome to MessageU, a secure client-server messaging application developed for 
             If that file doesn’t exist or is invalid, the server uses port 1357.
 
         Running the Server:
+        '''bash
             python main.py
+        '''
 
     The server will start listening for connections and log status messages to the console.
     
@@ -148,11 +150,13 @@ Welcome to MessageU, a secure client-server messaging application developed for 
             Link against Crypto++.
         
         Running the Client;
+        '''bash
             ./MessageUClient.exe
+        '''
 
     The client provides an interactive menu in the console.
 
-6. Usage
+## 6. Usage
     Client Menu:
     When you run the client, you will see the following options:
 
@@ -185,7 +189,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
     (0) Exit client: Closes the client application.
 
 
-7. Troubleshooting & Tips
+## 7. Troubleshooting & Tips
     Ensure Configuration Files Exist:
 
         server.info on the client side must contain <ip>:<port>.
