@@ -61,29 +61,29 @@ Header:
 
 Main Request Codes:
 
-600: Register
+- 600: Register
 
-601: Request Clients List
+- 601: Request Clients List
 
-602: Request Public Key
+- 602: Request Public Key
 
-603: Send Message (any message type)
+- 603: Send Message (any message type)
 
-604: Fetch Waiting Messages
+- 604: Fetch Waiting Messages
 
 Main Response Codes:
 
-2100: Registration successful (includes new Client ID)
+- 2100: Registration successful (includes new Client ID)
 
-2101: Clients list
+- 2101: Clients list
 
-2102: Public key
+- 2102: Public key
 
-2103: Acknowledgment of storing a new message
+- 2103: Acknowledgment of storing a new message
 
-2104: Delivery of waiting messages
+- 2104: Delivery of waiting messages
 
-9000: General error response
+- 9000: General error response
 
 ## 4. Encryption Details
 RSA (1024-bit):
