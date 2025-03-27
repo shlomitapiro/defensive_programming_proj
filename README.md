@@ -12,147 +12,147 @@ Exchange public keys so that clients can share a symmetric key (AES) securely.
 Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
 
 ## 2. System Architecture
-        Client-Server Model:
+Client-Server Model:
 
-        A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
+- A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
 
-        Each client connects to the server to register, send messages, or fetch waiting messages.
+- Each client connects to the server to register, send messages, or fetch waiting messages.
 
-        Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
+- Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
 
-        End-to-End Encryption:
+End-to-End Encryption:
 
-        - RSA (asymmetric) is used for exchanging keys: one client encrypts a newly generated AES key with the other client’s public RSA key.
+- RSA (asymmetric) is used for exchanging keys: one client encrypts a newly generated AES key with the other client’s public RSA key.
 
-        - AES (symmetric) is used to encrypt actual text messages with a shared key known only to the two clients involved.
+- AES (symmetric) is used to encrypt actual text messages with a shared key known only to the two clients involved.
 
-        Data Storage:
+Data Storage:
 
-        - In the base version, the server keeps user and message data in memory.
+- In the base version, the server keeps user and message data in memory.
 
-        - Optionally, the project demonstrates using an SQLite database file (e.g. defensive.db) for persistent storage.
+- Optionally, the project demonstrates using an SQLite database file (e.g. defensive.db) for persistent storage.
 
 
 ## 3. Protocol Overview
-    Communication between client and server follows a custom binary protocol over TCP.
+Communication between client and server follows a custom binary protocol over TCP.
 
-    Request (client → server):
-        Header:
+Request (client → server):
+    Header:
 
-            Client ID: 16 bytes
+        Client ID: 16 bytes
 
-            Version: 1 byte
+        Version: 1 byte
 
-            Request Code: 2 bytes
+        Request Code: 2 bytes
 
-            Payload Size: 4 bytes (little endian)
+        Payload Size: 4 bytes (little endian)
 
-            Payload: variable length, depends on the request code
+        Payload: variable length, depends on the request code
 
-    Response (server → client):
-        Header:
+Response (server → client):
+    Header:
 
-            Version: 1 byte
+        Version: 1 byte
 
-            Response Code: 2 bytes
+        Response Code: 2 bytes
 
-            Payload Size: 4 bytes (little endian)
+        Payload Size: 4 bytes (little endian)
 
-            Payload: variable length, depends on the response code
+        Payload: variable length, depends on the response code
 
-    Main Request Codes:
-        600: Register
+Main Request Codes:
+    600: Register
 
-        601: Request Clients List
+    601: Request Clients List
 
-        602: Request Public Key
+    602: Request Public Key
 
-        603: Send Message (any message type)
+    603: Send Message (any message type)
 
-        604: Fetch Waiting Messages
+    604: Fetch Waiting Messages
 
-    Main Response Codes:
-        2100: Registration successful (includes new Client ID)
+Main Response Codes:
+    2100: Registration successful (includes new Client ID)
 
-        2101: Clients list
+    2101: Clients list
 
-        2102: Public key
+    2102: Public key
 
-        2103: Acknowledgment of storing a new message
+    2103: Acknowledgment of storing a new message
 
-        2104: Delivery of waiting messages
+    2104: Delivery of waiting messages
 
-        9000: General error response
+    9000: General error response
 
 ## 4. Encryption Details
-    RSA (1024-bit):
+RSA (1024-bit):
 
-        Used for exchanging the symmetric key.
+    Used for exchanging the symmetric key.
 
-        Each client holds a private key and corresponding public key.
+    Each client holds a private key and corresponding public key.
 
-        The client’s public key is stored on the server for other clients to request.
+    The client’s public key is stored on the server for other clients to request.
 
-    AES (CBC mode):
+AES (CBC mode):
 
-        Used for encrypting messages and files.
+    Used for encrypting messages and files.
 
-        128-bit keys (16 bytes).
+    128-bit keys (16 bytes).
 
-        For simplicity, the IV is set to zero in this exercise (not recommended for production).
+    For simplicity, the IV is set to zero in this exercise (not recommended for production).
 
-    Security Flow:
+Security Flow:
 
-        Client A obtains Client B’s public RSA key from the server.
+    Client A obtains Client B’s public RSA key from the server.
 
-        Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
+    Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
 
-        Client B uses its private RSA key to decrypt and retrieve the AES key.
+    Client B uses its private RSA key to decrypt and retrieve the AES key.
 
-        Subsequent messages use that AES key for end-to-end encryption.
+    Subsequent messages use that AES key for end-to-end encryption.
 
-5. Installation & Setup
-    Server Setup:
-        Requirements:
+##5. Installation & Setup
+Server Setup:
+    Requirements:
 
-            Python 3.x
+        Python 3.x
 
-            Standard libraries (socket, sqlite3, logging, etc.)
+        Standard libraries (socket, sqlite3, logging, etc.)
 
-            Port Configuration
+        Port Configuration
 
-            By default, the server reads the port from a file named myport.info.
+        By default, the server reads the port from a file named myport.info.
 
-            If that file doesn’t exist or is invalid, the server uses port 1357.
+        If that file doesn’t exist or is invalid, the server uses port 1357.
 
-        Running the Server:
-        '''bash
-            python main.py
-        '''
+    Running the Server:
+    '''bash
+        python main.py
+    '''
 
-    The server will start listening for connections and log status messages to the console.
+The server will start listening for connections and log status messages to the console.
     
-    Client Setup:
-        Requirements:
+Client Setup:
+    Requirements:
 
-            A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
+        A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
 
-            The Crypto++ library (for RSA and AES).
+        The Crypto++ library (for RSA and AES).
 
-        Server Address:
+    Server Address:
 
-            Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
+        Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
 
-        Building the Client:
+    Building the Client:
 
-            Include all .cpp and .h files in the client folder in your project.
+        Include all .cpp and .h files in the client folder in your project.
 
-            Link against Crypto++.
-        
-        Running the Client;
-        '''bash
-            ./MessageUClient.exe
-        '''
+        Link against Crypto++.
+    
+    Running the Client;
+    '''bash
+        ./MessageUClient.exe
+    '''
 
     The client provides an interactive menu in the console.
 
@@ -190,20 +190,20 @@ Send and receive encrypted messages (and optionally files) via the server, which
 
 
 ## 7. Troubleshooting & Tips
-    Ensure Configuration Files Exist:
+Ensure Configuration Files Exist:
 
-        server.info on the client side must contain <ip>:<port>.
+    server.info on the client side must contain <ip>:<port>.
 
-        myport.info on the server side is optional (defaults to 1357 if missing).
+    myport.info on the server side is optional (defaults to 1357 if missing).
 
-    Check Logs:
+Check Logs:
 
-        The server prints logs (via Python’s logging) to help diagnose connection or database issues.
+    The server prints logs (via Python’s logging) to help diagnose connection or database issues.
 
-    Key Management:
+Key Management:
 
-        The private RSA key is saved in me.info as Base64.
+    The private RSA key is saved in me.info as Base64.
 
-        Public keys are stored on the server.
+    Public keys are stored on the server.
 
-        If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
+    If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
