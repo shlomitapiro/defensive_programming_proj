@@ -37,123 +37,131 @@ Data Storage:
 Communication between client and server follows a custom binary protocol over TCP.
 
 Request (client → server):
-    Header:
 
-        Client ID: 16 bytes
+Header:
 
-        Version: 1 byte
+- Client ID: 16 bytes
 
-        Request Code: 2 bytes
+- Version: 1 byte
 
-        Payload Size: 4 bytes (little endian)
+- Request Code: 2 bytes
 
-        Payload: variable length, depends on the request code
+- Payload Size: 4 bytes (little endian)
+
+- Payload: variable length, depends on the request code
 
 Response (server → client):
-    Header:
 
-        Version: 1 byte
+Header:
 
-        Response Code: 2 bytes
+- Version: 1 byte
 
-        Payload Size: 4 bytes (little endian)
+- Response Code: 2 bytes
 
-        Payload: variable length, depends on the response code
+- Payload Size: 4 bytes (little endian)
+
+- Payload: variable length, depends on the response code
 
 Main Request Codes:
-    600: Register
 
-    601: Request Clients List
+600: Register
 
-    602: Request Public Key
+601: Request Clients List
 
-    603: Send Message (any message type)
+602: Request Public Key
 
-    604: Fetch Waiting Messages
+603: Send Message (any message type)
+
+604: Fetch Waiting Messages
 
 Main Response Codes:
-    2100: Registration successful (includes new Client ID)
 
-    2101: Clients list
+2100: Registration successful (includes new Client ID)
 
-    2102: Public key
+2101: Clients list
 
-    2103: Acknowledgment of storing a new message
+2102: Public key
 
-    2104: Delivery of waiting messages
+2103: Acknowledgment of storing a new message
 
-    9000: General error response
+2104: Delivery of waiting messages
+
+9000: General error response
 
 ## 4. Encryption Details
 RSA (1024-bit):
 
-    Used for exchanging the symmetric key.
+Used for exchanging the symmetric key.
 
-    Each client holds a private key and corresponding public key.
+Each client holds a private key and corresponding public key.
 
-    The client’s public key is stored on the server for other clients to request.
+The client’s public key is stored on the server for other clients to request.
 
 AES (CBC mode):
 
-    Used for encrypting messages and files.
+Used for encrypting messages and files.
 
-    128-bit keys (16 bytes).
+128-bit keys (16 bytes).
 
-    For simplicity, the IV is set to zero in this exercise (not recommended for production).
+For simplicity, the IV is set to zero in this exercise (not recommended for production).
 
 Security Flow:
 
-    Client A obtains Client B’s public RSA key from the server.
+Client A obtains Client B’s public RSA key from the server.
 
-    Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
+Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
 
-    Client B uses its private RSA key to decrypt and retrieve the AES key.
+Client B uses its private RSA key to decrypt and retrieve the AES key.
 
-    Subsequent messages use that AES key for end-to-end encryption.
+Subsequent messages use that AES key for end-to-end encryption.
 
-##5. Installation & Setup
+## 5. Installation & Setup
+
 Server Setup:
-    Requirements:
 
-        Python 3.x
+Requirements:
 
-        Standard libraries (socket, sqlite3, logging, etc.)
+- Python 3.x
 
-        Port Configuration
+- Standard libraries (socket, sqlite3, logging, etc.)
 
-        By default, the server reads the port from a file named myport.info.
+- Port Configuration
 
-        If that file doesn’t exist or is invalid, the server uses port 1357.
+- By default, the server reads the port from a file named myport.info.
 
-    Running the Server:
-        python main.py
+- If that file doesn’t exist or is invalid, the server uses port 1357.
+
+Running the Server:
+    python main.py
 
 The server will start listening for connections and log status messages to the console.
     
 Client Setup:
+
 Requirements:
 
-    A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
+- A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
 
-    The Crypto++ library (for RSA and AES).
+- The Crypto++ library (for RSA and AES).
 
 Server Address:
 
-    Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
+- Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
 
 Building the Client:
 
-    Include all .cpp and .h files in the client folder in your project.
+- Include all .cpp and .h files in the client folder in your project.
 
-    Link against Crypto++.
+- Link against Crypto++.
 
-Running the Client;
+Running the Client:
     ./MessageUClient.exe
 
 The client provides an interactive menu in the console.
 
 ## 6. Usage
     Client Menu:
+    
     When you run the client, you will see the following options:
 
         MessageU client at your service.
