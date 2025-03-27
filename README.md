@@ -91,29 +91,29 @@ Main Response Codes:
 ## 4. Encryption Details
 RSA (1024-bit):
 
-Used for exchanging the symmetric key.
+    Used for exchanging the symmetric key.
 
-Each client holds a private key and corresponding public key.
+    Each client holds a private key and corresponding public key.
 
-The client’s public key is stored on the server for other clients to request.
+    The client’s public key is stored on the server for other clients to request.
 
 AES (CBC mode):
 
-Used for encrypting messages and files.
+    Used for encrypting messages and files.
 
-128-bit keys (16 bytes).
+    128-bit keys (16 bytes).
 
-For simplicity, the IV is set to zero in this exercise (not recommended for production).
+    For simplicity, the IV is set to zero in this exercise (not recommended for production).
 
 Security Flow:
 
-Client A obtains Client B’s public RSA key from the server.
+    Client A obtains Client B’s public RSA key from the server.
 
-Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
+    Client A creates an AES symmetric key and encrypts it with B’s public key; server stores/delivers it to B.
 
-Client B uses its private RSA key to decrypt and retrieve the AES key.
+    Client B uses its private RSA key to decrypt and retrieve the AES key.
 
-Subsequent messages use that AES key for end-to-end encryption.
+    Subsequent messages use that AES key for end-to-end encryption.
 
 ## 5. Installation & Setup
 
@@ -161,7 +161,7 @@ The client provides an interactive menu in the console.
 
 ## 6. Usage
     Client Menu:
-    
+
     When you run the client, you will see the following options:
 
         MessageU client at your service.
