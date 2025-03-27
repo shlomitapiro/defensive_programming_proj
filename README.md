@@ -28,10 +28,7 @@ End-to-End Encryption:
 
 Data Storage:
 
-- In the base version, the server keeps user and message data in memory.
-
-- Optionally, the project demonstrates using an SQLite database file (e.g. defensive.db) for persistent storage.
-
+- The project demonstrates using an SQLite database file (e.g. defensive.db) for persistent storage.
 
 ## 3. Protocol Overview
 Communication between client and server follows a custom binary protocol over TCP.
