@@ -12,7 +12,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
     Send and receive encrypted messages (and optionally files) via the server, which acts as a message relay without seeing any plaintext.
 
 2. System Architecture
-    Client-Server Model
+    Client-Server Model:
 
         - A central server receives requests, holds messages in storage, and forwards them to the correct recipients.
 
@@ -20,13 +20,13 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         - Messages are encrypted end-to-end, preventing the server from reading them in plaintext.
 
-    End-to-End Encryption
+    End-to-End Encryption:
 
         - RSA (asymmetric) is used for exchanging keys: one client encrypts a newly generated AES key with the other client’s public RSA key.
 
         - AES (symmetric) is used to encrypt actual text messages with a shared key known only to the two clients involved.
 
-    Data Storage
+    Data Storage:
 
         - In the base version, the server keeps user and message data in memory.
 
@@ -36,31 +36,31 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 3. Protocol Overview
     Communication between client and server follows a custom binary protocol over TCP.
 
-    Request (client → server)
-    Header:
+    Request (client → server):
+        Header:
 
-        Client ID: 16 bytes
+            Client ID: 16 bytes
 
-        Version: 1 byte
+            Version: 1 byte
 
-        Request Code: 2 bytes
+            Request Code: 2 bytes
 
-        Payload Size: 4 bytes (little endian)
+            Payload Size: 4 bytes (little endian)
 
-        Payload: variable length, depends on the request code
+            Payload: variable length, depends on the request code
 
-    Response (server → client)
-    Header:
+    Response (server → client):
+        Header:
 
-        Version: 1 byte
+            Version: 1 byte
 
-        Response Code: 2 bytes
+            Response Code: 2 bytes
 
-        Payload Size: 4 bytes (little endian)
+            Payload Size: 4 bytes (little endian)
 
-        Payload: variable length, depends on the response code
+            Payload: variable length, depends on the response code
 
-    Main Request Codes
+    Main Request Codes:
         600: Register
 
         601: Request Clients List
@@ -71,7 +71,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         604: Fetch Waiting Messages
 
-    Main Response Codes
+    Main Response Codes:
         2100: Registration successful (includes new Client ID)
 
         2101: Clients list
@@ -85,7 +85,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
         9000: General error response
 
 4. Encryption Details
-    RSA (1024-bit)
+    RSA (1024-bit):
 
         Used for exchanging the symmetric key.
 
@@ -93,7 +93,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         The client’s public key is stored on the server for other clients to request.
 
-    AES (CBC mode)
+    AES (CBC mode):
 
         Used for encrypting messages and files.
 
@@ -101,7 +101,7 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
         For simplicity, the IV is set to zero in this exercise (not recommended for production).
 
-    Security Flow
+    Security Flow:
 
         Client A obtains Client B’s public RSA key from the server.
 
@@ -112,59 +112,61 @@ Welcome to MessageU, a secure client-server messaging application developed for 
         Subsequent messages use that AES key for end-to-end encryption.
 
 5. Installation & Setup
-    Server Setup
-        Requirements
+    Server Setup:
+        Requirements:
 
-        Python 3.x
+            Python 3.x
 
-        Standard libraries (socket, sqlite3, logging, etc.)
+            Standard libraries (socket, sqlite3, logging, etc.)
 
-        Port Configuration
+            Port Configuration
 
-        By default, the server reads the port from a file named myport.info.
+            By default, the server reads the port from a file named myport.info.
 
-        If that file doesn’t exist or is invalid, the server uses port 1357.
+            If that file doesn’t exist or is invalid, the server uses port 1357.
 
-        Running the Server
+        Running the Server:
             python main.py
-            The server will start listening for connections and log status messages to the console.
+
+    The server will start listening for connections and log status messages to the console.
     
-    Client Setup
-        Requirements
+    Client Setup:
+        Requirements:
 
             A C++11 (or later) compiler (e.g., Visual Studio, g++, MinGW).
 
             The Crypto++ library (for RSA and AES).
 
-        Server Address
+        Server Address:
 
             Put the server IP and port in server.info, e.g. 127.0.0.1:1357.
 
-        Building the Client
+        Building the Client:
 
             Include all .cpp and .h files in the client folder in your project.
 
             Link against Crypto++.
         
-        Running the Client
+        Running the Client;
             ./MessageUClient.exe
-        The client provides an interactive menu in the console.
+
+    The client provides an interactive menu in the console.
 
 6. Usage
-    Client Menu
+    Client Menu:
     When you run the client, you will see the following options:
 
-    MessageU client at your service.
+        MessageU client at your service.
 
-    110) Register
-    120) Request for clients list
-    130) Request for public key
-    140) Fetch waiting messages
-    150) Send a text message
-    151) Send a request for symmetric key
-    152) Send your symmetric key
-    0) Exit client
-    ?
+        110) Register
+        120) Request for clients list
+        130) Request for public key
+        140) Fetch waiting messages
+        150) Send a text message
+        151) Send a request for symmetric key
+        152) Send your symmetric key
+        0) Exit client
+        ?
 
     (110) Register: Prompts for a username, generates an RSA key pair locally, and sends the public key to the server. Saves the client’s ID and private key in me.info.
 
@@ -184,50 +186,20 @@ Welcome to MessageU, a secure client-server messaging application developed for 
 
 
 7. Troubleshooting & Tips
-    Ensure Configuration Files Exist
+    Ensure Configuration Files Exist:
 
         server.info on the client side must contain <ip>:<port>.
 
         myport.info on the server side is optional (defaults to 1357 if missing).
 
-    Check Logs
+    Check Logs:
 
         The server prints logs (via Python’s logging) to help diagnose connection or database issues.
 
-    Key Management
+    Key Management:
 
         The private RSA key is saved in me.info as Base64.
 
         Public keys are stored on the server.
 
         If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
-
-
-8. Project Structure
-    A general overview of the relevant directories and files:
-
-    ├── server
-    │   ├── main.py                # Entry point for Python server
-    │   ├── server_utils.py        # Initializes server, manages sockets
-    │   ├── data
-    │   │   ├── database_manager.py  # SQLite DB logic
-    │   │   ├── client_manager.py    # Manages client records
-    │   │   └── message_manager.py   # Manages stored/pending messages
-    │   ├── communication
-    │   │   ├── connection_handler.py # Handles client connections
-    │   │   └── protocol.py           # Shared protocol implementation
-    │   └── config
-    │       └── myport.info         # Port configuration file (optional)
-    │
-    ├── client
-    │   ├── main.cpp               # Entry point for C++ client
-    │   ├── client.cpp/.h          # Main Client implementation
-    │   ├── protocol.cpp/.h        # Protocol creation/parsing in C++
-    │   ├── utils.cpp/.h           # Utility functions
-    │   ├── RSAWrapper.cpp/.h      # RSA encryption/decryption wrappers
-    │   ├── AESWrapper.cpp/.h      # AES encryption/decryption wrapper
-    │   ├── Base64Wrapper.cpp/.h   # Base64 encoding/decoding
-    │   ├── SocketWrapper.cpp/.h   # WinSock-based socket utility
-    │   └── ...
-    │
-    └── defensive.db               # SQLite database file (if used)
