@@ -199,18 +199,18 @@ The client provides an interactive menu in the console.
 ## 7. Troubleshooting & Tips
 Ensure Configuration Files Exist:
 
-    server.info on the client side must contain <ip>:<port>.
+- server.info on the client side must contain <ip>:<port>.
 
-    myport.info on the server side is optional (defaults to 1357 if missing).
+- myport.info on the server side is optional (defaults to 1357 if missing).
 
 Check Logs:
 
-    The server prints logs (via Python’s logging) to help diagnose connection or database issues.
+- The server prints logs (via Python’s logging) to help diagnose connection or database issues.
 
 Key Management:
 
-    The private RSA key is saved in me.info as Base64.
+- The private RSA key is saved in me.info as Base64.
 
-    Public keys are stored on the server.
+- Public keys are stored on the server.
 
-    If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
+- If you cannot decrypt a message, ensure you have correctly exchanged symmetric keys or requested them properly.
